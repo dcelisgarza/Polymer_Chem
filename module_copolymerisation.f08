@@ -26,7 +26,7 @@ module polymer_constituents
   end type termination
 
   interface operator(/)
-    ! Defines an operator which calls subroutines where operations are defined for derived type structures. In this case, for normalisation operations on parts of data structures with dimer and termination type.
+    ! Defines an operator which calls subroutines where operations are defined for derived type structures. In this case, for normalisation operations on parts of data structures with type 'dimer' or 'termination'.
     module procedure norm_term, norm_dimer_kij
   end interface
 

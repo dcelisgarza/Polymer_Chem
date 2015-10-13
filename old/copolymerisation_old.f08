@@ -10,18 +10,38 @@ subroutine polymerise
   type(dimer)       :: polymer
   ! Defining our termination variable.
   type(termination) :: term
-
+  ! Dummy name variables.
+  type(name) :: dname1, dname2, dname3, dname4
+  allocate (character(1)  :: dname1%name(3))
+  allocate (character(18) :: dname2%name(1))
+  allocate (character(8)  :: dname3%name(1))
+  allocate (character(13) :: dname4%name(1))
+  ! Single character names.
+  allocate (character(1) :: &
+                            polymer % I % name % name(1), &
+                            polymer % A % name % name(1), &
+                            polymer % B % name % name(1))
   ! Allocate the reaction coefficients for each constituent of our two-monomer copolymer.
   ! The first element is of the k_ij array is the reaction with A,
   ! the second is reaction with B.
   allocate (polymer % I % k_ij(2), & ! K_IA and K_IB.
             polymer % A % k_ij(2), & ! K_AA and K_AB.
-            polymer % B % k_ij(2)) & ! K_BA and K_BB.
+            polymer % B % k_ij(2))   ! K_BA and K_BB.
+
+  ! Allocate different terminations.
+  ! t: 1) Disproportionation, 2) Transfer, 3) Recombination.
+  ! l: kinetic chain length, only 1 for this example.
+  allocate (term % t(3), term % l(1))
+  ! Termination name.
+  allocate(character(18) :: term % name % name(3))
 
 ! What we're calling our monomers and initiator.
-  polymer % I % name = 'I'
-  polymer % A % name = 'A'
-  polymer % B % name = 'B'
+  !polymer % I % name % n(1) = 'I'
+  !print*, polymer % I % name % n(1)
+  !polymer % A % name % n(1) = 'A'
+  !print*, polymer % A % name % n(1)
+  !polymer % B % name (1) = 'B'
+  !print*, polymer % I % name (1)
 
 ! Asking for the amount of each constituent (given as an integer quantity).
   write(*,'(A)',advance='no') '[I] = ' ! How much initiator?
@@ -57,11 +77,11 @@ subroutine polymerise
 
 ! Termination probabilities
   write(*,'(A)',advance='no') 'P(Disproportionation) = ' ! P(disproportionation) ?
-  read(*,*) term % disp
+  read(*,*) term % t(1)
   write(*,'(A)',advance='no') 'P(Transfer) = ' ! P(transfer) ?
-  read(*,*) term % tran
+  read(*,*) term % t(2)
   write(*,'(A)',advance='no') 'P(Recombination) = ' ! P(recombination) ?
-  read(*,*) term % reco
+  read(*,*) term % t(3)
 ! Normalising termination probabilities so they add up to 1.
   term = term/term
 end subroutine polymerise

@@ -4,6 +4,7 @@
 module mod_config_polymer
   ! Module with types and basic procedures for the simulation of a polymerisation.
   use numbers
+  implicit none
 !=================================================================================!
 !--------------------------------------TYPES--------------------------------------!
 !=================================================================================!
@@ -22,6 +23,7 @@ module mod_config_polymer
     character(:), allocatable :: name(:) ! Termination name.
     real(dp), allocatable     :: p(:)    ! Termination probability.
     integer(i16), allocatable :: l(:)    ! Kinetic chain length.
+    character(:), allocatable :: store(:)
   end type termination
 !=================================================================================!
 !------------------------------------INTERFACE------------------------------------!

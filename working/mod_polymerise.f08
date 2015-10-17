@@ -23,13 +23,13 @@ contains
     ! Allocating reaction probabilities for all monomers.
     allocate ( dimer(1) % p(n_ki), dimer(2) % p(n_k), dimer(3) % p(n_k) )
     ! Allocating termination names.
-    allocate ( character(len=18) :: term(1) % name(1) )
-    allocate ( character(len=8)  :: term(2) % name(1) )
-    allocate ( character(len=13) :: term(3) % name(1) )
+    allocate ( character :: term(1) % name(1) )
+    allocate ( character :: term(2) % name(1) )
+    allocate ( character :: term(3) % name(1) )
     ! Allocating termination storage.
-    allocate ( character(len=*)  :: term(1) % store(1) )
-    allocate ( character(len=*)  :: term(2) % store(1) )
-    allocate ( character(len=*)  :: term(3) % store(1) )
+    allocate ( character :: term(1) % store(1) )
+    allocate ( character :: term(2) % store(1) )
+    allocate ( character :: term(3) % store(1) )
   end subroutine allocation
 end module two_monomer_data_declaration
 !=================================================================================!

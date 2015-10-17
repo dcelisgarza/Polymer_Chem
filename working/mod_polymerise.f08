@@ -26,6 +26,10 @@ contains
     allocate ( character(len=18) :: term(1) % name(1) )
     allocate ( character(len=8)  :: term(2) % name(1) )
     allocate ( character(len=13) :: term(3) % name(1) )
+    ! Allocating termination storage.
+    allocate ( character(len=*)  :: term(1) % store(1) )
+    allocate ( character(len=*)  :: term(2) % store(1) )
+    allocate ( character(len=*)  :: term(3) % store(1) )
   end subroutine allocation
 end module two_monomer_data_declaration
 !=================================================================================!
@@ -59,10 +63,10 @@ contains
   subroutine chain_terminate
   end subroutine chain_terminate
 
-  subroutine chain_store(array,chain)
+  subroutine chain_store(arr,chain)
     implicit none
     character(:), allocatable, intent(in)      :: chain
-    character(len=*), allocatable, intent(out) :: array(:)
-    character(len=*), allocatable,
+    character(len=*), allocatable, intent(out) :: arr(:)
+  !  character(len=*), allocatable,
   end subroutine chain_store
 end module polymerisation

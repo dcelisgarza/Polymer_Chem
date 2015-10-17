@@ -23,7 +23,8 @@ module mod_config_polymer
     character(:), allocatable :: name(:) ! Termination name.
     real(dp), allocatable     :: p(:)    ! Termination probability.
     integer(i16), allocatable :: l(:)    ! Kinetic chain length.
-    character(:), allocatable :: store(:)
+    character(:), allocatable :: chain   ! Chain of a given termination.
+    character(:), allocatable :: store(:)! Store chains which end in a given termination.
   end type termination
 !=================================================================================!
 !------------------------------------INTERFACE------------------------------------!

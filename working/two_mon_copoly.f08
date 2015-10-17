@@ -1,9 +1,11 @@
 program two_mon_copoly
   !use two_monomer_data_declaration
   use polymerisation
+  implicit none
   character(:), allocatable :: chain
   integer(i2) :: counter
   real(dp) :: start, end
+
 
   call cpu_time(start)
   call allocation
@@ -26,18 +28,5 @@ program two_mon_copoly
   call cpu_time(end)
   print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(chain),' and chain = ', chain
   print*, 'Execution time = ', end-start, 'seconds.'
-
-  !subroutine chain_grow(chain,mon)
-  !  implicit none
-  !  type(monomer), intent(in)        :: mon
-  !  character(:), allocatable, intent(inout) :: chain
-  !  !character(len = len(old) + 1_i2) :: new
-  !  character(:), allocatable        :: work
-  !  !new = old // mon%name
-  !  allocate(character(len=len(chain) + 1_i2) :: work)
-  !  work = chain // mon % name
-  !  deallocate(chain)
-  !  allocate(character(len=len(work)) :: chain)
-  !  chain = work
-  !end subroutine chain_grow
+  print*, '-----------------------------------------'
 end program two_mon_copoly

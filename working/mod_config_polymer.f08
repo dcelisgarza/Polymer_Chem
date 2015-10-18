@@ -5,27 +5,32 @@ module mod_config_polymer
   ! Module with types and basic procedures for the simulation of a polymerisation.
   use numbers
   implicit none
+
 !=================================================================================!
 !--------------------------------------TYPES--------------------------------------!
 !=================================================================================!
   type monomer
     ! Definition of a monomer.
-    character(1), allocatable :: name   ! Monomer name.
-    real(i16)                 :: amount ! Amount of monomer.
-    real(dp)                  :: mass   ! Monomer mass.
-    real(dp), allocatable     :: k(:)   ! Kinetic reaction coefficients with other monomers.
-    !real(dp), allocatable     :: r(:)   ! Kinetic reaction ratios with other monomers. extent(r) = extent(k_ij)/2
-    real(dp), allocatable     :: p(:)   ! Reaction probability. Let n := # of monomers, then extent(p) = n.
+    character(:), allocatable :: name(:) ! Monomer name.
+    real(i16)                 :: amount  ! Amount of monomer.
+    real(dp)                  :: mass    ! Monomer mass.
+    real(dp), allocatable     :: k(:)    ! Kinetic reaction coefficients with other monomers.
+    real(dp), allocatable     :: p(:)    ! Reaction probability. Let n := # of monomers, then extent(p) = n.
   end type monomer
 !=================================================================================!
   type termination
     ! Definition of a termination.
     character(:), allocatable :: name(:) ! Termination name.
     real(dp), allocatable     :: p(:)    ! Termination probability.
-    integer(i16), allocatable :: l(:)    ! Kinetic chain length.
-    character(:), allocatable :: chain   ! Chain of a given termination.
-    character(:), allocatable :: store(:)! Store chains which end in a given termination.
   end type termination
+!=================================================================================!
+  type chains
+    integer(i16)              :: kl           ! Kinetic chain length.
+    character(:), allocatable :: chain(:)     ! Last chain.
+    character(:), allocatable :: store(:)     ! Store chains.
+    integer(i16), allocatable :: lengths(:)   ! Chain lengths.
+  end type chains
+
 !=================================================================================!
 !------------------------------------INTERFACE------------------------------------!
 !=================================================================================!
@@ -38,6 +43,7 @@ module mod_config_polymer
     ! Defining division of monomers and terminations.
     module procedure normalise_termination
   end interface
+
 !=================================================================================!
 !-----------------------------------PROCEDURE-------------------------------------!
 !=================================================================================!

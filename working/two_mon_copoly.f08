@@ -2,14 +2,14 @@ program two_mon_copoly
   !use two_monomer_data_declaration
   use polymerisation
   implicit none
-  character(:), allocatable :: chain
-  integer(i2) :: counter
+  character(:), allocatable :: test_chain
+  integer(i1) :: counter
   real(dp) :: start, end
 
 
   call cpu_time(start)
   call allocation
-  dimer(1) % name = 'I'
+  dimer(1) % name(1)(1:1) = 'I'
   dimer(1) % amount = 50_i16
   dimer(1) % mass = 78.5_dp
   dimer(1) % k = [0.1_dp,0.2_dp]
@@ -19,14 +19,25 @@ program two_mon_copoly
   print*, 'K = ', dimer(1) % k, ' || ', ' P = ', dimer(1) % p
   print*, '-----------------------------------------'
 
-  allocate(character(len=1) :: chain)
-  chain = dimer(1) % name
-  print*, 'Before elongation: chain length = ', len(chain),' and chain = ', chain
+  allocate(character(len=1) :: test_chain)
+  test_chain = dimer(1) % name(1)(1:1)
+  print*, 'Before elongation: chain length = ', len(test_chain),' and chain = ', test_chain
   do counter = 1, 5
-    call chain_grow(chain,dimer(1))
+    call chain_grow(test_chain,dimer(1),len('I'))
   end do
+  print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(test_chain),' and chain = ', test_chain
+  print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing module allocation function for current chain.'
+  c_chain = dimer(1) % name(1)(1:1)
+  print*, 'Before elongation: chain length = ', len(c_chain),' and chain = ', c_chain
+  do counter = 1, 5
+    call chain_grow(c_chain,dimer(1),len('I'))
+  end do
+  print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(c_chain),' and chain = ', c_chain
   call cpu_time(end)
-  print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(chain),' and chain = ', chain
-  print*, 'Execution time = ', end-start, 'seconds.'
+  print*, '-----------------------------------------'
+  print*, 'Total execution time = ', end-start, 'seconds.'
   print*, '-----------------------------------------'
 end program two_mon_copoly

@@ -1,14 +1,11 @@
 program test_char_ar
   use polymerisation
   implicit none
-  character(30), dimension(4) :: page
+  character(30) :: page(4)
   character(len=30) :: line(4)
-  integer(i2) :: i
-
+  integer(i1) :: i
   character(len=30), allocatable :: dimd(:)
-
   character(:), allocatable :: dimc
-
   character(:), allocatable :: dimi(:)
   character(:), allocatable :: dimn(:)
 
@@ -36,7 +33,7 @@ program test_char_ar
   allocate( character :: dimc )
   do i = 1, 4
     dimc = line(i)
-    print*, dimc
+    print*, trim(dimc), len(trim(dimc))
   end do
   print*, '---------------------------------'
 

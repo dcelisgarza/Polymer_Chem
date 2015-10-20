@@ -35,12 +35,12 @@ contains
                term(2) % p(1), &
                term(3) % p(1) )
     ! Allocating old chains, chain storage and chain lengths.
-    allocate ( character :: o_chain(1) % chain(1), o_chain(1) % store(1), &
-                            o_chain(2) % chain(1), o_chain(2) % store(1), &
-                            o_chain(3) % chain(1), o_chain(3) % store(1) )
-    allocate ( o_chain(1) % lengths(1), &
-               o_chain(2) % lengths(1), &
-               o_chain(3) % lengths(1) )
+    allocate ( character :: o_chain(1) % store(1), &
+                            o_chain(2) % store(1), &
+                            o_chain(3) % store(1) )
+    allocate ( o_chain(1) % length(1), &
+               o_chain(2) % length(1), &
+               o_chain(3) % length(1) )
     ! Allocating current chain
     allocate ( character :: c_chain )
   end subroutine allocation
@@ -59,28 +59,84 @@ contains
   subroutine chain_initiate
   end subroutine chain_initiate
 
-  subroutine chain_grow(chain,mon,name_len)
+  subroutine chain_grow(chain,name)
     implicit none
-    type(monomer), intent(in)                :: mon
-    character(:), allocatable, intent(inout) :: chain
-    !character(len = len(old) + 1_i2) :: new
-    character(:), allocatable                :: work
+    ! Make sure the name has already been trimmed before it enters the subroutine.
+    character(len=*), intent(in)             :: name
     integer(i4)                              :: name_len
-    !new = old // mon%name
-    allocate(character( len=len( chain ) + len( mon % name ) ) :: work )
-    work = chain // mon % name(1)(1:name_len)
+    character(:), allocatable, intent(inout) :: chain
+    character(:), allocatable                :: work
+    name_len = len(name)
+    allocate( character :: work )
+    work = chain // name
     deallocate( chain )
-    allocate( character( len=len( work ) ) :: chain )
+    allocate( character :: chain )
     chain = work
   end subroutine chain_grow
 
   subroutine chain_terminate
   end subroutine chain_terminate
 
-  subroutine chain_store(arr,chain)
+  !subroutine chain_store(o_chain,c_chain)
+    !implicit none
+    !character(:), allocatable, intent(inout)  :: o_chain(:) ! Store chains.
+    !character(len=*), allocatable, intent(in) :: c_chain
+    !type(chains), allocatable                 :: work
+    !integer(i16)                              :: o_index, n_index
+    !o_index = o_chain % index
+    !n_index = o_index + 1_i16
+    !allocate ( character :: work % store(o_index) )
+    !work % store = o_chain % store
+  !end subroutine chain_store
+
+  subroutine chain_store(o_chain,c_chain)
     implicit none
-    character(:), allocatable, intent(in)      :: chain
-    character(len=*), allocatable, intent(out) :: arr(:)
-  !  character(len=*), allocatable,
+    type(chains), allocatable, intent(inout)  :: o_chain
+    character(len=*), allocatable, intent(in) :: c_chain
+    type(chains), allocatable                 :: work
+    integer(i16)                              :: o_index, n_index, i, c_chain_length
+
+    ! Save the old index.
+    o_index = o_chain % index
+    ! The new index is one more than the old one.
+    n_index = o_index + 1
+    ! Obtain the current chain length.
+    c_chain_length = len(c_chain)
+
+    ! If this is not the first chain.
+    if (o_index > 1) then
+      ! Allocate the array where the data will be saved.
+      allocate( character :: work % store(o_index) )
+      allocate( work % length(o_index) )
+
+      ! Save all the old chains and their lengths dummy arrays.
+      do concurrent (i = 1: o_index)
+        work % length(i) = o_chain % length(i)
+        work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
+      end do
+
+      ! Deallocate the old chain and length storage and allocate space for one more entry (n_index = o_index + 1) in each.
+      deallocate( o_chain % store, o_chain % length )
+      allocate( character :: o_chain % store(n_index) )
+      allocate( o_chain % length(n_index) )
+
+      ! Move the saved chains and their lengths into the expanded storage array.
+      do concurrent (i = 1: o_index)
+        o_chain % length(i) = work % length(i)
+        o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:work % length(i))
+      end do
+
+      ! Add the new entries to the expanded length and chain storage arrays.
+      o_chain % length(n_index) = c_chain_length
+      o_chain % store(n_index)(1:c_chain_length) = c_chain
+    else
+      ! If this is the first entry of the array then there is nothing to save.
+      ! So we only need to save the chain and its length.
+      o_chain % length(o_index) = c_chain_length
+      o_chain % store(o_index)(1:c_chain_length) = c_chain
+    end if
+
+    ! Update the chain index.
+    o_chain % index = n_index
   end subroutine chain_store
 end module polymerisation

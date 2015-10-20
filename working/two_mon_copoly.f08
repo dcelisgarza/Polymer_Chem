@@ -9,7 +9,7 @@ program two_mon_copoly
 
   call cpu_time(start)
   call allocation
-  dimer(1) % name(1)(1:1) = 'I'
+  dimer(1) % name(1)(1:3) = 'IAB'
   dimer(1) % amount = 50_i16
   dimer(1) % mass = 78.5_dp
   dimer(1) % k = [0.1_dp,0.2_dp]
@@ -19,11 +19,11 @@ program two_mon_copoly
   print*, 'K = ', dimer(1) % k, ' || ', ' P = ', dimer(1) % p
   print*, '-----------------------------------------'
 
-  allocate(character(len=1) :: test_chain)
-  test_chain = dimer(1) % name(1)(1:1)
+  allocate(character :: test_chain)
+  test_chain = trim(dimer(1) % name(1)(1:3))
   print*, 'Before elongation: chain length = ', len(test_chain),' and chain = ', test_chain
   do counter = 1, 5
-    call chain_grow(test_chain,dimer(1),len('I'))
+    call chain_grow(test_chain,trim(dimer(1) % name(1)(1:3)))
   end do
   print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(test_chain),' and chain = ', test_chain
   print*, '-----------------------------------------'
@@ -33,7 +33,7 @@ program two_mon_copoly
   c_chain = dimer(1) % name(1)(1:1)
   print*, 'Before elongation: chain length = ', len(c_chain),' and chain = ', c_chain
   do counter = 1, 5
-    call chain_grow(c_chain,dimer(1),len('I'))
+    call chain_grow(c_chain,trim(dimer(1) % name(1)(1:1)))
   end do
   print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(c_chain),' and chain = ', c_chain
   call cpu_time(end)

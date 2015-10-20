@@ -26,9 +26,9 @@ module mod_config_polymer
 !=================================================================================!
   type chains
     integer(i16)              :: kl           ! Kinetic chain length.
-    character(:), allocatable :: chain(:)     ! Last chain.
     character(:), allocatable :: store(:)     ! Store chains.
-    integer(i16), allocatable :: lengths(:)   ! Chain lengths.
+    integer(i16)              :: index        ! Index of a chain.
+    integer(i16), allocatable :: length(:)   ! Chain lengths.
   end type chains
 
 !=================================================================================!

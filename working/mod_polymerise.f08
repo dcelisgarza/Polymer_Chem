@@ -77,34 +77,24 @@ contains
   subroutine chain_terminate
   end subroutine chain_terminate
 
-  !subroutine chain_store(o_chain,c_chain)
-    !implicit none
-    !character(:), allocatable, intent(inout)  :: o_chain(:) ! Store chains.
-    !character(len=*), allocatable, intent(in) :: c_chain
-    !type(chains), allocatable                 :: work
-    !integer(i16)                              :: o_index, n_index
-    !o_index = o_chain % index
-    !n_index = o_index + 1_i16
-    !allocate ( character :: work % store(o_index) )
-    !work % store = o_chain % store
-  !end subroutine chain_store
-
   subroutine chain_store(o_chain,c_chain)
     implicit none
-    type(chains), allocatable, intent(inout)  :: o_chain
-    character(len=*), allocatable, intent(in) :: c_chain
-    type(chains), allocatable                 :: work
-    integer(i16)                              :: o_index, n_index, i, c_chain_length
+    type(chains), intent(inout)               :: o_chain
+    character(len=*), intent(in)              :: c_chain
+    type(chains)                              :: work
+    integer(i16)                              :: o_index, c_index, n_index, c_chain_length, i
 
+    ! Current index
+    c_index = o_chain % index
     ! Save the old index.
-    o_index = o_chain % index
+    o_index = c_index - 1
     ! The new index is one more than the old one.
-    n_index = o_index + 1
+    n_index = c_index + 1
     ! Obtain the current chain length.
     c_chain_length = len(c_chain)
 
     ! If this is not the first chain.
-    if (o_index > 1) then
+    if (c_index > 1) then
       ! Allocate the array where the data will be saved.
       allocate( character :: work % store(o_index) )
       allocate( work % length(o_index) )
@@ -127,13 +117,13 @@ contains
       end do
 
       ! Add the new entries to the expanded length and chain storage arrays.
-      o_chain % length(n_index) = c_chain_length
-      o_chain % store(n_index)(1:c_chain_length) = c_chain
+      o_chain % length(c_index) = c_chain_length
+      o_chain % store(c_index)(1:c_chain_length) = c_chain
     else
       ! If this is the first entry of the array then there is nothing to save.
       ! So we only need to save the chain and its length.
-      o_chain % length(o_index) = c_chain_length
-      o_chain % store(o_index)(1:c_chain_length) = c_chain
+      o_chain % length(c_index) = c_chain_length
+      o_chain % store(c_index)(1:c_chain_length) = c_chain
     end if
 
     ! Update the chain index.

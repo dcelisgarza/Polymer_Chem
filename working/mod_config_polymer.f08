@@ -11,7 +11,7 @@ module mod_config_polymer
 !=================================================================================!
   type monomer
     ! Definition of a monomer.
-    character(:), allocatable :: name(:) ! Monomer name.
+    character(:), allocatable :: name ! Monomer name.
     real(i16)                 :: amount  ! Amount of monomer.
     real(dp)                  :: mass    ! Monomer mass.
     real(dp), allocatable     :: k(:)    ! Kinetic reaction coefficients with other monomers.
@@ -20,15 +20,16 @@ module mod_config_polymer
 !=================================================================================!
   type termination
     ! Definition of a termination.
-    character(:), allocatable :: name(:) ! Termination name.
+    character(:), allocatable :: name ! Termination name.
     real(dp), allocatable     :: p(:)    ! Termination probability.
   end type termination
 !=================================================================================!
   type chains
-    integer(i16)              :: kl           ! Kinetic chain length.
-    character(:), allocatable :: store(:)     ! Store chains.
-    integer(i16)              :: index        ! Index of a chain.
-    integer(i16), allocatable :: length(:)   ! Chain lengths.
+    integer(i16)              :: kl        ! Kinetic chain length.
+    character(:), allocatable :: store(:)  ! Store chains.
+    integer(i16)              :: index     ! Index of a chain.
+    integer(i16)              :: rem       ! Number of chains removed.
+    integer(i16), allocatable :: length(:) ! Chain lengths.
   end type chains
 
 !=================================================================================!

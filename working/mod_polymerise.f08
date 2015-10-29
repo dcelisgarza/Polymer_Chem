@@ -19,17 +19,17 @@ contains
   subroutine allocation
     implicit none
     ! Allocating monomer names.
-    allocate( character :: dimer(1) % name(1), &
-                           dimer(2) % name(1), &
-                           dimer(3) % name(1) )
+    allocate( character :: dimer(1) % name, &
+                           dimer(2) % name, &
+                           dimer(3) % name )
     ! Allocating reaction coefficients (k) and probabilities (p) for all monomers.
     allocate( dimer(1) % k(n_mon), dimer(1) % p(n_mon), &
               dimer(2) % k(n_mon), dimer(2) % p(n_mon), &
               dimer(3) % k(n_mon), dimer(3) % p(n_mon) )
     ! Allocating termination names.
-    allocate ( character :: term(1) % name(1), &
-                            term(2) % name(1), &
-                            term(3) % name(1) )
+    allocate ( character :: term(1) % name, &
+                            term(2) % name, &
+                            term(3) % name )
     ! Allocating termination probabilities.
     allocate ( term(1) % p(1), &
                term(2) % p(1), &
@@ -41,6 +41,8 @@ contains
     allocate ( o_chain(1) % length(1), &
                o_chain(2) % length(1), &
                o_chain(3) % length(1) )
+    o_chain % index = 1
+    o_chain % rem   = 0
     ! Allocating current chain
     allocate ( character :: c_chain )
   end subroutine allocation
@@ -59,19 +61,19 @@ contains
   subroutine chain_initiate
   end subroutine chain_initiate
 
-  subroutine chain_grow(chain,name)
+  subroutine chain_grow(c_chain,name)
     implicit none
     ! Make sure the name has already been trimmed before it enters the subroutine.
     character(len=*), intent(in)             :: name
     integer(i4)                              :: name_len
-    character(:), allocatable, intent(inout) :: chain
+    character(:), allocatable, intent(inout) :: c_chain
     character(:), allocatable                :: work
     name_len = len(name)
     allocate( character :: work )
-    work = chain // name
-    deallocate( chain )
-    allocate( character :: chain )
-    chain = work
+    work = c_chain // name
+    deallocate( c_chain )
+    allocate( character :: c_chain )
+    c_chain = work
   end subroutine chain_grow
 
   subroutine chain_terminate
@@ -129,4 +131,25 @@ contains
     ! Update the chain index.
     o_chain % index = n_index
   end subroutine chain_store
+
+  subroutine transfer(ol_chain, os_chain, c_chain, t_index)
+    type(chains), intent(inout)              :: ol_chain, os_chain ! Old chains, ol := lifted chain, os := old chains by transfer.
+    character(:), allocatable, intent(inout) :: c_chain ! Current chain comes in, reactivated chain comes out.
+    integer(i16), intent(in)                 :: t_index ! Lifted index
+    ! Storing the chain that just ended.
+    call chain_store(os_chain, c_chain)
+    ! Swapping the current chain to the chain we just transfered the active site to.
+    c_chain = ol_chain % store(t_index)(1:ol_chain % length(t_index))
+    ! Flagging the chain we just lifted as removed.
+    ol_chain % length(t_index) = 0
+    ol_chain % store(t_index)(1:1) = '0'
+    ol_chain % rem = ol_chain % rem + 1
+  end subroutine transfer
+
+!  subroutine remove_chain(o_chain,rem_index)
+!    type(chains), intent(inout) :: o_chain
+!    integer(i16), intent(in)    :: rem_index
+!    o_chain % length = pack(o_chain % length, o_chain % length /= 0)
+!    o_chain % store  = pack(o_chain % store), o_chain % store(1:)(1:1) /= '0')
+!  end subroutine remove_chain
 end module polymerisation

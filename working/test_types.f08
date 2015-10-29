@@ -9,13 +9,13 @@ program test
   type(termination) :: term(4)
 
   ! Allocate monomer names and reaction coefficients.
-  allocate ( character(len=1) :: I % name(1), A % name(1), B % name(1) )
+  allocate ( character(len=1) :: I % name, A % name, B % name )
   allocate ( I % k_ij(2), A % k_ij(2), B % k_ij(2) )
 
   ! Allocate termination names.
-  allocate ( character(len=18) :: disp % name(1) )
-  allocate ( character(len=8)  :: tran % name(1) )
-  allocate ( character(len=13) :: reco % name(1) )
+  allocate ( character(len=18) :: disp % name )
+  allocate ( character(len=8)  :: tran % name )
+  allocate ( character(len=13) :: reco % name )
 
   ! Testing the termination normalisation function using termination.
   disp % p = 1._dp
@@ -49,13 +49,13 @@ program test
   print*, '-------------------'
 
   ! Allocate polymer names and reaction coefficients.
-  allocate ( character(len=1) :: dimer(1) % name(1), dimer(2) % name(1), dimer(3) % name(1) )
+  allocate ( character(len=1) :: dimer(1) % name, dimer(2) % name, dimer(3) % name )
   allocate ( dimer(1) % k_ij(2), dimer(2) % k_ij(2), dimer(3) % k_ij(2) )
 
   ! Allocate termination array names.
-  allocate ( character(len=18) :: term(1) % name(1) )
-  allocate ( character(len=8)  :: term(2) % name(1) )
-  allocate ( character(len=13) :: term(3) % name(1) )
+  allocate ( character(len=18) :: term(1) % name )
+  allocate ( character(len=8)  :: term(2) % name )
+  allocate ( character(len=13) :: term(3) % name )
 
   ! Testing the termination normalisation function using termination array.
   term(1) % p = 1._dp

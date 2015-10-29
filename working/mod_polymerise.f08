@@ -15,25 +15,31 @@ module two_monomer_data_declaration
   type(termination)         :: term(n_term)
   type(chains)              :: o_chain(n_term)
   character(:), allocatable :: c_chain
+
 contains
   subroutine allocation
     implicit none
+
     ! Allocating monomer names.
     allocate( character :: dimer(1) % name, &
                            dimer(2) % name, &
                            dimer(3) % name )
+
     ! Allocating reaction coefficients (k) and probabilities (p) for all monomers.
     allocate( dimer(1) % k(n_mon), dimer(1) % p(n_mon), &
               dimer(2) % k(n_mon), dimer(2) % p(n_mon), &
               dimer(3) % k(n_mon), dimer(3) % p(n_mon) )
+
     ! Allocating termination names.
     allocate ( character :: term(1) % name, &
                             term(2) % name, &
                             term(3) % name )
+
     ! Allocating termination probabilities.
     allocate ( term(1) % p(1), &
                term(2) % p(1), &
                term(3) % p(1) )
+
     ! Allocating old chains, chain storage and chain lengths.
     allocate ( character :: o_chain(1) % store(1), &
                             o_chain(2) % store(1), &
@@ -43,8 +49,10 @@ contains
                o_chain(3) % length(1) )
     o_chain % index = 1
     o_chain % rem   = 0
+
     ! Allocating current chain
     allocate ( character :: c_chain )
+
   end subroutine allocation
 end module two_monomer_data_declaration
 !=================================================================================!
@@ -54,26 +62,38 @@ module polymerisation
   use two_monomer_data_declaration
   implicit none
 contains
-
   subroutine in_out
   end subroutine in_out
 
   subroutine chain_initiate
   end subroutine chain_initiate
 
-  subroutine chain_grow(c_chain,name)
+  subroutine refresh_chain_storage(o_chain)
     implicit none
+
+    type(chains), intent(inout) :: o_chain
+
+    ! Reallocating memory.
+    deallocate( o_chain % store, o_chain % length )
+    allocate( character :: o_chain % store(1) )
+    allocate( o_chain % length(1) )
+
+    ! We must add an index if we want to refresh this for chain storage.
+    o_chain % index = 1
+    o_chain % rem = 0
+
+  end subroutine refresh_chain_storage
+
+  subroutine chain_grow(c_chain, name)
+    implicit none
+
     ! Make sure the name has already been trimmed before it enters the subroutine.
     character(len=*), intent(in)             :: name
-    integer(i4)                              :: name_len
     character(:), allocatable, intent(inout) :: c_chain
-    character(:), allocatable                :: work
-    name_len = len(name)
-    allocate( character :: work )
-    work = c_chain // name
-    deallocate( c_chain )
-    allocate( character :: c_chain )
-    c_chain = work
+
+    ! Concantenating the name onto the chain.
+    c_chain = c_chain // name
+
   end subroutine chain_grow
 
   subroutine chain_terminate
@@ -81,6 +101,7 @@ contains
 
   subroutine chain_store(o_chain,c_chain)
     implicit none
+
     type(chains), intent(inout)               :: o_chain
     character(len=*), intent(in)              :: c_chain
     type(chains)                              :: work
@@ -130,9 +151,12 @@ contains
 
     ! Update the chain index.
     o_chain % index = n_index
+
   end subroutine chain_store
 
   subroutine transfer(ol_chain, os_chain, c_chain, t_index)
+    implicit none
+
     type(chains), intent(inout)              :: ol_chain, os_chain ! Old chains, ol := lifted chain, os := old chains by transfer.
     character(:), allocatable, intent(inout) :: c_chain ! Current chain comes in, reactivated chain comes out.
     integer(i16), intent(in)                 :: t_index ! Lifted index
@@ -141,9 +165,14 @@ contains
     ! Swapping the current chain to the chain we just transfered the active site to.
     c_chain = ol_chain % store(t_index)(1:ol_chain % length(t_index))
     ! Flagging the chain we just lifted as removed.
+    ! Making the removed chain's length equal to zero.
     ol_chain % length(t_index) = 0
-    ol_chain % store(t_index)(1:1) = '0'
+    ! If we don't do this Fortran places whatever character we set this to at the start of all other chains.
+    ! By doing this we avoid such undesirable phenomenon. Works with (1:n) where n <= 0.
+    ol_chain % store(t_index)(1:0) = ''
+    ! Add a counter to the number of removed chains.
     ol_chain % rem = ol_chain % rem + 1
+
   end subroutine transfer
 
 !  subroutine remove_chain(o_chain,rem_index)

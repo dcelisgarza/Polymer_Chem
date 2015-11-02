@@ -154,16 +154,11 @@ contains
 
   end subroutine chain_store
 
-  subroutine transfer(ol_chain, os_chain, c_chain, t_index)
+  subroutine remove_chain(ol_chain, t_index)
     implicit none
 
-    type(chains), intent(inout)              :: ol_chain, os_chain ! Old chains, ol := lifted chain, os := old chains by transfer.
-    character(:), allocatable, intent(inout) :: c_chain ! Current chain comes in, reactivated chain comes out.
-    integer(i16), intent(in)                 :: t_index ! Lifted index
-    ! Storing the chain that just ended.
-    call chain_store(os_chain, c_chain)
-    ! Swapping the current chain to the chain we just transfered the active site to.
-    c_chain = ol_chain % store(t_index)(1:ol_chain % length(t_index))
+    type(chains), intent(inout)              :: ol_chain ! Old chains, ol := lifted chain.
+    integer(i16), intent(in)                 :: t_index ! Lifted index.
     ! Flagging the chain we just lifted as removed.
     ! Making the removed chain's length equal to zero.
     ol_chain % length(t_index) = 0
@@ -173,12 +168,25 @@ contains
     ! Add a counter to the number of removed chains.
     ol_chain % rem = ol_chain % rem + 1
 
+  end subroutine remove_chain
+
+  subroutine transfer(ol_chain, os_chain, c_chain, t_index)
+    implicit none
+
+    type(chains), intent(inout)              :: ol_chain, os_chain ! Old chains, ol := lifted chain, os := old chains by transfer.
+    character(:), allocatable, intent(inout) :: c_chain ! Current chain comes in, reactivated chain comes out.
+    integer(i16), intent(in)                 :: t_index ! Lifted index.
+    ! Storing the chain that just ended.
+    call chain_store(os_chain, c_chain)
+    ! Swapping the current chain to the chain we just transfered the active site to.
+    c_chain = ol_chain % store(t_index)(1:ol_chain % length(t_index))
+    ! Removing chain.
+    call remove_chain(ol_chain, t_index)
+
   end subroutine transfer
 
-!  subroutine remove_chain(o_chain,rem_index)
-!    type(chains), intent(inout) :: o_chain
-!    integer(i16), intent(in)    :: rem_index
-!    o_chain % length = pack(o_chain % length, o_chain % length /= 0)
-!    o_chain % store  = pack(o_chain % store), o_chain % store(1:)(1:1) /= '0')
-!  end subroutine remove_chain
+!  subroutine recombination(o_chain, c_chain, index)
+!    implicit none
+!    type(chains), intent(inout) :: os_chain
+!  end subroutine recombination
 end module polymerisation

@@ -18,6 +18,7 @@ program test_subroutines
   ! For one-step allocation of character arrays (osca).
   character(:), allocatable :: osca(:)
   integer(i16) :: remove_entry
+  character(1) :: str
 
   call cpu_time(start)
   print*, '---------------------------------'
@@ -95,8 +96,9 @@ program test_subroutines
 
   print*, ''
   c_chain = 'TransferTest'
-  write(*, '(A)', advance = "no"), ' Which entry do you want to remove (keep it in [1,6])? '
-  read(*,*), remove_entry
+  !write(*, '(A)', advance = "no"), ' Which entry do you want to remove (keep it in [1,6])? '
+  !read(*,*), remove_entry
+  remove_entry = 6
   call transfer(o_chain(1), o_chain(2), c_chain, remove_entry)
   print*, "Testing transfer termination and storage. We're using the", remove_entry,'th entry of o_chain(1)'
   do counter = 1, 6
@@ -112,6 +114,16 @@ program test_subroutines
   print*, ''
   print*, 'New current chain = ', c_chain
   print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing packing function on character arrays.'
+  deallocate (o_chain(2) % store)
+  allocate (character :: o_chain(2) % store(5))
+  do counter = 1, 4
+    write (Unit=str, FMT="(I1)") counter
+    o_chain(2) % store(counter)(1:5) = 'test' // str
+    print*, o_chain(2) % store(counter)(1:5)
+  end do
 
   call cpu_time(end)
   print*, ''

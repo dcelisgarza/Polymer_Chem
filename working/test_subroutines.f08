@@ -18,6 +18,7 @@ program test_subroutines
   ! For one-step allocation of character arrays (osca).
   character(:), allocatable :: osca(:)
   integer(i16) :: remove_entry
+  integer :: i
   character(1) :: str
 
   call cpu_time(start)
@@ -60,7 +61,24 @@ program test_subroutines
   print*, '-----------------------------------------'
 
   print*, ''
+  print*, 'Testing chain elongation and storage for a chain accessible through use association (chain declared in a module).'
+  c_chain = dimer(1) % name(1:1)
+  print*, 'Before elongation: chain length = ', len(c_chain),' and chain = ', c_chain
+  do counter = 1, 5
+    call chain_store(o_chain(1),c_chain)
+    call chain_grow(c_chain,trim(dimer(1) % name(1:1)))
+  end do
+  call chain_store(o_chain(1),c_chain)
+  print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(c_chain),' and chain = ', c_chain
+  print*, 'Printing the chain at every step'
+  do counter = 1, 6
+    print*, o_chain(1) % store(counter)(1:o_chain(1) % length(counter))
+  end do
+  print*, '-----------------------------------------'
+
+  print*, ''
   print*, 'Testing chain elongation and storage through host association (chain declared in the main program).'
+  call refresh_chain_storage(o_chain(1))
   allocate(character :: test_chain)
   test_chain = trim(dimer(1) % name(1:3))
   print*, 'Before elongation: chain length = ', len(test_chain),' and chain = ', test_chain
@@ -71,23 +89,6 @@ program test_subroutines
     call chain_store(o_chain(1),test_chain)
   print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(test_chain),' and chain = ', test_chain
   print*, '-----------------------------------------'
-  print*, 'Printing the chain at every step'
-  do counter = 1, 6
-    print*, o_chain(1) % store(counter)(1:o_chain(1) % length(counter))
-  end do
-  print*, '-----------------------------------------'
-
-  print*, ''
-  print*, 'Testing chain elongation and storage for a chain accessible through use association (chain declared in a module).'
-  call refresh_chain_storage(o_chain(1))
-  c_chain = dimer(1) % name(1:1)
-  print*, 'Before elongation: chain length = ', len(c_chain),' and chain = ', c_chain
-  do counter = 1, 5
-    call chain_store(o_chain(1),c_chain)
-    call chain_grow(c_chain,trim(dimer(1) % name(1:1)))
-  end do
-  call chain_store(o_chain(1),c_chain)
-  print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(c_chain),' and chain = ', c_chain
   print*, 'Printing the chain at every step'
   do counter = 1, 6
     print*, o_chain(1) % store(counter)(1:o_chain(1) % length(counter))
@@ -116,14 +117,34 @@ program test_subroutines
   print*, '-----------------------------------------'
 
   print*, ''
-  print*, 'Testing packing function on character arrays.'
+  print*, 'Testing internal write to string and appending it to another one.'
   deallocate (o_chain(2) % store)
-  allocate (character :: o_chain(2) % store(5))
+  allocate (character(5) :: o_chain(2) % store(5))
   do counter = 1, 4
     write (Unit=str, FMT="(I1)") counter
-    o_chain(2) % store(counter)(1:5) = 'test' // str
-    print*, o_chain(2) % store(counter)(1:5)
+    test_chain = 'abcd' // str
+    o_chain(2) % store(counter)(1:5) = test_chain
+    o_chain(2) % length(counter) = len(o_chain(2) % store(counter)(1:5))
+    print*, counter, o_chain(2) % store(counter)(1:5), o_chain(2) % length(counter)
   end do
+  print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing string reversal.'
+  forall (i=1:len(test_chain)) test_chain(i:i) = test_chain(len(test_chain)-i+1:len(test_chain)-i+1)
+  print*, test_chain
+  print*, '-----------------------------------------'
+  do counter = 1, 5
+    !print*, counter, o_chain(1) % store(counter)(1:o_chain(1)%length(counter))
+    test_chain = o_chain(1) % store(counter)(1:o_chain(1)%length(counter))
+    print*, test_chain
+    forall (i=1:len(test_chain)) test_chain(i:i) = test_chain(len(test_chain)-i+1:len(test_chain)-i+1)
+    print*, test_chain
+    !forall (i=1:o_chain(1)%length(counter)) o_chain(1) % store(counter)(i:i) = &
+    !   o_chain(1) % store(counter)(o_chain(1)%length(counter)-i+1:o_chain(1)%length(counter)-i+1)
+    !print*, counter, o_chain(1) % store(counter)(1:o_chain(1)%length(counter))
+  end do
+  print*, '-----------------------------------------'
 
   call cpu_time(end)
   print*, ''

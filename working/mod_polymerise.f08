@@ -170,14 +170,14 @@ contains
 
   end subroutine remove_chain
 
-  subroutine transfer(ol_chain, os_chain, c_chain, t_index)
+  subroutine transfer(ol_chain, ot_chain, c_chain, t_index)
     implicit none
 
-    type(chains), intent(inout)              :: ol_chain, os_chain ! Old chains, ol := lifted chain, os := old chains by transfer.
+    type(chains), intent(inout)              :: ol_chain, ot_chain ! Old chains, ol := lifted chain, os := old chains by transfer.
     character(:), allocatable, intent(inout) :: c_chain ! Current chain comes in, reactivated chain comes out.
     integer(i16), intent(in)                 :: t_index ! Lifted index.
     ! Storing the chain that just ended.
-    call chain_store(os_chain, c_chain)
+    call chain_store(ot_chain, c_chain)
     ! Swapping the current chain to the chain we just transfered the active site to.
     c_chain = ol_chain % store(t_index)(1:ol_chain % length(t_index))
     ! Removing chain.

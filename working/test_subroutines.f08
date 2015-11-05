@@ -20,9 +20,25 @@ program test_subroutines
   integer(i16) :: remove_entry
   integer :: i
   character(1) :: str
-  double precision, parameter :: dummy = 0.0
-  real(dp) :: ZBQLU01
-  external ZBQLINI,ZBQLU01
+
+  interface seed
+    SUBROUTINE ZBQLINI(SEED)
+      INTEGER LFLNO
+      PARAMETER (LFLNO=80)
+      INTEGER SEED,SS,MM,HH,DD,FILNO,I
+      INTEGER INIT
+      real(kind(1.0d0)) ZBQLIX(43),B,C
+      real(kind(1.0d0)) TMPVAR1,DSS,DMM,DHH,DDD
+      INTEGER TIME(8)
+    END SUBROUTINE ZBQLINI
+  end interface seed
+
+  interface rnduniform
+    FUNCTION ZBQLU01(DUMMY)
+      real(kind(1.0d0)) ZBQLU01,DUMMY,B,C,ZBQLIX(43),X,B2,BINV
+      INTEGER CURPOS,ID22,ID43
+    END FUNCTION ZBQLU01
+  end interface rnduniform
 
   call cpu_time(start)
   print*, '---------------------------------'
@@ -180,7 +196,7 @@ program test_subroutines
   print*, 'Testing random number generation.'
   call ZBQLINI(0)
   do counter = 1, 10
-    print*, ZBQLU01(dummy)
+    print*, ZBQLU01(0._dp), floor(ZBQLU01(0._dp)*2.0)+1
   end do
 
   call cpu_time(end)

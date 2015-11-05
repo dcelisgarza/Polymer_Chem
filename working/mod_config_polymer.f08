@@ -25,11 +25,11 @@ module mod_config_polymer
   end type termination
 !=================================================================================!
   type chains
-    integer(i16)              :: kl        ! Kinetic chain length.
     character(:), allocatable :: store(:)  ! Store chains.
+    integer(i16), allocatable :: length(:) ! Chain lengths.
+    integer(i16)              :: kl        ! Kinetic chain length.
     integer(i16)              :: index     ! Index of a chain.
     integer(i16)              :: rem       ! Number of chains removed.
-    integer(i16), allocatable :: length(:) ! Chain lengths.
   end type chains
 
 !=================================================================================!

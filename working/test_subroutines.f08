@@ -20,6 +20,9 @@ program test_subroutines
   integer(i16) :: remove_entry
   integer :: i
   character(1) :: str
+  double precision, parameter :: dummy = 0.0
+  real(dp) :: ZBQLU01
+  external ZBQLINI,ZBQLU01
 
   call cpu_time(start)
   print*, '---------------------------------'
@@ -100,8 +103,8 @@ program test_subroutines
   !write(*, '(A)', advance = "no"), ' Which entry do you want to remove (keep it in [1,6])? '
   !read(*,*), remove_entry
   remove_entry = 6
-  call transfer(o_chain(1), o_chain(2), c_chain, remove_entry)
   print*, "Testing transfer termination and storage. We're using the", remove_entry,'th entry of o_chain(1)'
+  call transfer(o_chain(1), o_chain(2), c_chain, remove_entry)
   do counter = 1, 6
     if (o_chain(1) % length(counter) == 0) then
       print*, 'Old chain #', counter, ' has become the new current chain.'
@@ -140,11 +143,45 @@ program test_subroutines
     print*, test_chain
     forall (i=1:len(test_chain)) test_chain(i:i) = test_chain(len(test_chain)-i+1:len(test_chain)-i+1)
     print*, test_chain
-    !forall (i=1:o_chain(1)%length(counter)) o_chain(1) % store(counter)(i:i) = &
-    !   o_chain(1) % store(counter)(o_chain(1)%length(counter)-i+1:o_chain(1)%length(counter)-i+1)
-    !print*, counter, o_chain(1) % store(counter)(1:o_chain(1)%length(counter))
   end do
   print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing string reversal subroutine.'
+  print*, 'Before reversal: ', test_chain
+  call chain_reverse(test_chain)
+  print*, 'After reversal:  ', test_chain
+  print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing recombination subroutine.'
+  if (remove_entry <= 6 .and. remove_entry > 2) then
+    remove_entry = remove_entry - 2
+  else
+    remove_entry = remove_entry + 1
+  end if
+  print*, "Testing recombination termination and storage. We're using the", remove_entry,'th entry of o_chain(1)'
+    print*, 'Old chain to be recombined: ', o_chain(1) % store(remove_entry)(1:o_chain(1) % length(remove_entry))
+    print*, 'Current chain to be inverted and recombined: ', test_chain
+  call recombination(o_chain(1), o_chain(3), test_chain, remove_entry)
+  do counter = 1, 6
+    if (o_chain(1) % length(counter) == 0) then
+      print*, 'Old chain #', counter, ' has been removed.'
+      ! We go to the very end of this do iteration (we skip everything between here and end do).
+      cycle
+    endif
+    print*, 'Old chain #', counter, ' = ' , o_chain(1) % store(counter)(1:o_chain(1) % length(counter))
+  end do
+  print*, ''
+  print*, 'Chain ended by recombination = ', test_chain
+  print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing random number generation.'
+  call ZBQLINI(0)
+  do counter = 1, 10
+    print*, ZBQLU01(dummy)
+  end do
 
   call cpu_time(end)
   print*, ''

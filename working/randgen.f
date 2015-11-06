@@ -78,9 +78,6 @@
       INTEGER INIT
       real(kind(1.0d0)) ZBQLIX(43),B,C
       real(kind(1.0d0)) TMPVAR1,DSS,DMM,DHH,DDD
-* GFORTRAN 5.2.0's OPEN() and READ() from file capabilities are fucked. I'm fixing this shit.
-      INTEGER TIME(8)
-* GFORTRAN 5.2.0's OPEN() and READ() from file capabilities are fucked. I'm fixing this shit.
 
       COMMON /ZBQL0001/ ZBQLIX,B,C
       SAVE INIT
@@ -115,35 +112,27 @@
 *>>>>>>>	COMMENT OUT FROM HERE IF YOU DON'T HAVE  >>>>>>>
 *>>>>>>>	'CALL SYSTEM' CAPABILITY ...		 >>>>>>>
 *>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-**       CALL SYSTEM(' date +%S%M%H%j > zbql1234.tmp')
+       CALL SYSTEM(' date +%S%M%H%j > zbql1234.tmp')
 *
 *       Try all file numbers for LFLNO to 999
 *
-**       FILNO = LFLNO
-** 10    OPEN(FILNO,FILE='zbql1234.tmp',ERR=11)
-**       GOTO 12
-** 11    FILNO = FILNO + 1
-**       IF (FILNO.GT.999) THEN
-**        WRITE(*,2)
-**        RETURN
-**       ENDIF
-**       GOTO 10
-** 12    READ(FILNO,'(3(I2),I3)') SS,MM,HH,DD
-**       CLOSE(FILNO)
-**       CALL SYSTEM('rm zbql1234.tmp')
-**       DSS = DINT((DBLE(SS)/6.0D1) * B)
-**       DMM = DINT((DBLE(MM)/6.0D1) * B)
-**       DHH = DINT((DBLE(HH)/2.4D1) * B)
-**       DDD = DINT((DBLE(DD)/3.65D2) * B)
-**       TMPVAR1 = DMOD(DSS+DMM+DHH+DDD,B)
-* GFORTRAN 5.2.0's OPEN() and READ() from file capabilities are fucked. I'm fixing this shit.
-        call date_and_time(values=time)
-        DSS = DINT((DBLE(time(7))/6.0D1) * B)
-        DMM = DINT((DBLE(time(6))/6.0D1) * B)
-        DHH = DINT((DBLE(time(5))/2.4D1) * B)
-        DDD = DINT((DBLE(time(3))/3.65D2) * B)
-        TMPVAR1 = DMOD(DSS+DMM+DHH+DDD,B)
-* GFORTRAN 5.2.0's OPEN() and READ() from file capabilities are fucked. I'm fixing this shit.
+       FILNO = LFLNO
+ 10    OPEN(FILNO,FILE='zbql1234.tmp',ERR=11)
+       GOTO 12
+ 11    FILNO = FILNO + 1
+       IF (FILNO.GT.999) THEN
+        WRITE(*,2)
+        RETURN
+       ENDIF
+       GOTO 10
+12    READ(FILNO,'(3(I2),I3)') SS,MM,HH,DD
+       CLOSE(FILNO)
+       CALL SYSTEM('rm zbql1234.tmp')
+       DSS = DINT((DBLE(SS)/6.0D1) * B)
+       DMM = DINT((DBLE(MM)/6.0D1) * B)
+       DHH = DINT((DBLE(HH)/2.4D1) * B)
+       DDD = DINT((DBLE(DD)/3.65D2) * B)
+       TMPVAR1 = DMOD(DSS+DMM+DHH+DDD,B)
 *<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 *<<<<<<<<	... TO HERE (END OF COMMENTING OUT FOR 	  <<<<<<<
 *<<<<<<<<	USERS WITHOUT 'CALL SYSTEM' CAPABILITY	  <<<<<<<

@@ -1,6 +1,5 @@
 program test_subroutines
-  !use two_monomer_data_declaration
-  use polymerisation
+  use two_monomer_data_declaration
   implicit none
   character(:), allocatable :: test_chain
   integer(i1) :: counter
@@ -20,28 +19,14 @@ program test_subroutines
   integer(i16) :: remove_entry
   integer :: i
   character(1) :: str
-
-  interface seed
-    SUBROUTINE ZBQLINI(SEED)
-      INTEGER LFLNO
-      PARAMETER (LFLNO=80)
-      INTEGER SEED,SS,MM,HH,DD,FILNO,I
-      INTEGER INIT
-      real(kind(1.0d0)) ZBQLIX(43),B,C
-      real(kind(1.0d0)) TMPVAR1,DSS,DMM,DHH,DDD
-      INTEGER TIME(8)
-    END SUBROUTINE ZBQLINI
-  end interface seed
-
-  interface rnduniform
-    FUNCTION ZBQLU01(DUMMY)
-      real(kind(1.0d0)) ZBQLU01,DUMMY,B,C,ZBQLIX(43),X,B2,BINV
-      INTEGER CURPOS,ID22,ID43
-    END FUNCTION ZBQLU01
-  end interface rnduniform
+  integer, allocatable :: packing_integer(:)
+  type packing_character
+    character(:), allocatable, dimension(:) :: c
+  end type packing_character
+  type(packing_character) :: string
 
   call cpu_time(start)
-  print*, '---------------------------------'
+  print*, ''
   print*, 'Testing two step allocation of character arrays.'
   ! Allocate array size.
   allocate(tsca(2))
@@ -62,6 +47,14 @@ program test_subroutines
   print*, 'dsca % oscac(1) = ', dsca % oscac(1)(1:4)
   print*, 'dsca % oscac(2) = ', dsca % oscac(2)(1:9)
   print*, '---------------------------------'
+
+  call ZBQLINI(0)
+  print*, ''
+  print*, 'Testing random number generation.'
+  do counter = 1, 10
+    print*, ZBQLU01(0), floor(ZBQLU01(0)*2.0)+1
+  end do
+  print*, '-----------------------------------------'
 
   print*, ''
   print*, 'Testing one-step allocation of character arrays.'
@@ -118,10 +111,10 @@ program test_subroutines
   c_chain = 'TransferTest'
   !write(*, '(A)', advance = "no"), ' Which entry do you want to remove (keep it in [1,6])? '
   !read(*,*), remove_entry
-  remove_entry = 6
+  remove_entry = 4
   print*, "Testing transfer termination and storage. We're using the", remove_entry,'th entry of o_chain(1)'
   call transfer(o_chain(1), o_chain(2), c_chain, remove_entry)
-  do counter = 1, 6
+  do counter = 1, o_chain(1)%index-1
     if (o_chain(1) % length(counter) == 0) then
       print*, 'Old chain #', counter, ' has become the new current chain.'
       ! We go to the very end of this do iteration (we skip everything between here and end do).
@@ -138,7 +131,9 @@ program test_subroutines
   print*, ''
   print*, 'Testing internal write to string and appending it to another one.'
   deallocate (o_chain(2) % store)
-  allocate (character(5) :: o_chain(2) % store(5))
+  deallocate (o_chain(2) % length)
+  allocate (character :: o_chain(2) % store(5))
+  allocate (o_chain(2) % length(5))
   do counter = 1, 4
     write (Unit=str, FMT="(I1)") counter
     test_chain = 'abcd' // str
@@ -180,7 +175,8 @@ program test_subroutines
     print*, 'Old chain to be recombined: ', o_chain(1) % store(remove_entry)(1:o_chain(1) % length(remove_entry))
     print*, 'Current chain to be inverted and recombined: ', test_chain
   call recombination(o_chain(1), o_chain(3), test_chain, remove_entry)
-  do counter = 1, 6
+  print*, o_chain(1)%index
+  do counter = 1, o_chain(1)%index-1
     if (o_chain(1) % length(counter) == 0) then
       print*, 'Old chain #', counter, ' has been removed.'
       ! We go to the very end of this do iteration (we skip everything between here and end do).
@@ -193,11 +189,11 @@ program test_subroutines
   print*, '-----------------------------------------'
 
   print*, ''
-  print*, 'Testing random number generation.'
-  call ZBQLINI(0)
-  do counter = 1, 10
-    print*, ZBQLU01(0._dp), floor(ZBQLU01(0._dp)*2.0)+1
-  end do
+  print*, 'Testing updated chain removal subroutine. Works if both arrays are the same length'
+  print*, 'Chain lengths = ', o_chain(1) % length, ' Array size = ', size(o_chain(1) % length)
+  o_chain(1) % length = pack(o_chain(1) % length, o_chain(1) % length /= 0)
+  print*, 'Chain lengths = ', o_chain(1) % length, ' Array size = ', size(o_chain(1) % length)
+  print*, '-----------------------------------------'
 
   call cpu_time(end)
   print*, ''

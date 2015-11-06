@@ -5,13 +5,12 @@ module mod_config_polymer
   ! Module with types and basic procedures for the simulation of a polymerisation.
   use numbers
   implicit none
-
 !=================================================================================!
 !--------------------------------------TYPES--------------------------------------!
 !=================================================================================!
   type monomer
     ! Definition of a monomer.
-    character(:), allocatable :: name ! Monomer name.
+    character(:), allocatable :: name    ! Monomer name.
     real(i16)                 :: amount  ! Amount of monomer.
     real(dp)                  :: mass    ! Monomer mass.
     real(dp), allocatable     :: k(:)    ! Kinetic reaction coefficients with other monomers.

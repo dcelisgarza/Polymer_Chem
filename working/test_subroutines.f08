@@ -68,7 +68,7 @@ program test_subroutines
 
   print*, 'Testing allocation of parameters to a monomer.'
   call allocation
-  dimer(1) = monomer('IAB',50_i16,78.5_dp,[0.1_dp,0.2_dp],[0.5_dp,0.5_dp])
+  dimer(1) = monomer('IAB',50_i16,78.5_dp,[0._dp,0.1_dp,0.2_dp],[0._dp,0.5_dp,0.5_dp],0)
   print*, 'K = ', dimer(1) % k, ' || ', ' P = ', dimer(1) % p
   print*, '-----------------------------------------'
 
@@ -169,7 +169,7 @@ program test_subroutines
   if (remove_entry <= 6 .and. remove_entry > 2) then
     remove_entry = remove_entry - 2
   else
-    remove_entry = remove_entry + 1
+    remove_entry = remove_entry
   end if
   print*, "Testing recombination termination and storage. We're using the", remove_entry,'th entry of o_chain(1)'
     print*, 'Old chain to be recombined: ', o_chain(1) % store(remove_entry)(1:o_chain(1) % length(remove_entry))
@@ -185,14 +185,31 @@ program test_subroutines
     print*, 'Old chain #', counter, ' = ' , o_chain(1) % store(counter)(1:o_chain(1) % length(counter))
   end do
   print*, ''
-  print*, 'Chain ended by recombination = ', test_chain
+  print*, 'Chain ended by recombination = ', test_chain, ' Recombined chain =', o_chain(3)%store(1)(1:o_chain(3)%length(1))
   print*, '-----------------------------------------'
 
   print*, ''
   print*, 'Testing updated chain removal subroutine. Works if both arrays are the same length'
-  print*, 'Chain lengths = ', o_chain(1) % length, ' Array size = ', size(o_chain(1) % length)
+  print*, 'Chain lengths = ', o_chain(1) % length(1:size(o_chain(1)%length)), ' Array size = ', size(o_chain(1)%length)
   o_chain(1) % length = pack(o_chain(1) % length, o_chain(1) % length /= 0)
-  print*, 'Chain lengths = ', o_chain(1) % length, ' Array size = ', size(o_chain(1) % length)
+  print*, 'Chain lengths = ', o_chain(1) % length(1:size(o_chain(1)%length)), ' Array size = ', size(o_chain(1)%length)
+  print*, '-----------------------------------------'
+
+  print*, ''
+  print*, 'Testing reaction probability calculation.'
+  dimer(2) = monomer('A',20,1,[0.,1.,2.],[0.,0.,0.],0)
+  dimer(3) = monomer('B',10,1,[0.,1.,1.],[0.,0.,0.],0)
+  print*, 'Before calculation:'
+  do counter = 2, 3
+    print*, 'Name: ', dimer(counter) % name,', Amount = ', &
+    dimer(counter) % amount,', K = ', dimer(counter) % k, ', P = ', dimer(counter) % p
+  end do
+  call reaction_probability(2, 2, dimer)
+  print*, 'After calcullation:'
+  do counter = 2, 3
+    print*, 'Name: ', dimer(counter) % name,', Amount = ', &
+    dimer(counter) % amount,', K = ', dimer(counter) % k, ', P = ', dimer(counter) % p
+  end do
   print*, '-----------------------------------------'
 
   call cpu_time(end)

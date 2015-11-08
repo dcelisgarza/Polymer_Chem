@@ -1,0 +1,22 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{fontspec}
+\usepackage{lmodern}
+\usepackage{ucs}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[left=1.00in, right=1.00in, top=1.00in, bottom=1.00in]{geometry}
+\title{Linear Copolymerisation in \textsc{fortran 2008}}
+\author{Daniel Celis Garza}
+\date{\today}
+\begin{document}
+	\maketitle
+	The probability of reaction between monomers $i,~j$ is calculated by dividing the speed at which monomers $i,~j$ react by all possible reactions of $i$ with other monomers
+	\begin{align}
+		P_{ij} &= \dfrac{k_{ij} [i][j]}{\sum\limits_{j=1}^{N} k_{ij} [i][j]} \nonumber\\
+		P_{ij} &= \dfrac{k_{ij} [i][j]}{[i]\sum\limits_{j=1}^{N} k_{ij} [j]} \nonumber\\
+		P_{ij} &= \dfrac{k_{ij} [j]}{\sum\limits_{j=1}^{N} k_{ij} [j]} 
+	\end{align}
+	where $k \equiv$ reaction speed constant and $[\cdots]$ denotes concentration.
+\end{document}

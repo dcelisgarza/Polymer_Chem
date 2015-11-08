@@ -19,9 +19,8 @@ contains
     allocate( o_chain % length(1) )
     ! Refreshing indexes, removed chains and kinetic length.
     o_chain % index = 1
-    o_chain % rem = 0
-    o_chain % kl = 0
-
+    o_chain % rem   = 0
+    o_chain % kl    = 0
   end subroutine refresh_chain_storage
 !=================================================================================!
   subroutine refresh_chain(c_chain)
@@ -33,6 +32,81 @@ contains
     ! Allocating c_chain.
     allocate(character :: c_chain)
   end subroutine refresh_chain
+!=================================================================================!
+subroutine norm_termination(term)
+  implicit none
+  type(termination), intent(inout) :: term(:)
+  type(termination) :: norm_term
+  integer :: i, n_tot
+  n_tot = size(term)
+
+  ! Allocating memory.
+  allocate ( norm_term % p(n_tot) )
+  ! Initialising global variables.
+  norm_term  % p = 0.
+  ! Calculating the normalisation constant of terminations (CNT).
+  CNT: do i = 1, n_tot
+    norm_term % p = norm_term % p + term(i) % p
+  end do CNT
+  ! Normalising terminations.
+  NT: do concurrent (i = 1: n_tot)
+    term(i) % p = term(i) % p / norm_term % p
+  end do NT
+end subroutine norm_termination
+!=================================================================================!
+subroutine norm_monomer(mon)
+  implicit none
+  type(monomer), intent(inout) :: mon(:)
+  integer :: i, j, n_tot
+  real(dp), allocatable :: norm_mon(:)
+  n_tot = size(mon)
+  allocate( norm_mon(n_tot) )
+
+  ! Initialising global variables.
+  norm_mon = 0.
+  ! Calculating the normalisation constant of the reaction coefficients (CNM).
+  CNM: do i = 1, n_tot
+    CNM2: do j = 1, n_tot
+      norm_mon(i) = norm_mon(i) + mon(i) % k(j)
+    end do CNM2
+  end do CNM
+  ! Normalising reaction coefficients.
+  NM: do concurrent (i = 1: n_tot)
+    mon(i) % k = mon(i) % k / norm_mon(i)
+  end do NM
+end subroutine norm_monomer
+!=================================================================================!
+  subroutine reaction_probability(o_mon, n_mon, a_mon)
+    implicit none
+    type(monomer), intent(inout) :: a_mon(:)     ! Array of monomers.
+    integer, intent(in)          :: o_mon, n_mon ! o_mon := monomer in a chain (or initiator). n_mon := free monomer.
+    real(dp)                     :: num, denom   ! Numerator and denominator of the reaction probability.
+    integer                      :: i, nbr_mon
+
+    if (a_mon(o_mon) % k(n_mon) == 0) then
+      a_mon(o_mon) % p(n_mon) = 0
+      go to 1
+    end if
+
+    nbr_mon = size(a_mon)
+    denom = 0.
+    num = 0.
+
+    ! Old monomer in a chain (or initiator) = a_mon(o_mon)
+    ! Monomer whose probability will be tried = a_mon(n_mon)
+
+    ! Calculating the numerator.
+    ! Let "i" represent the monomer in a chain (or initiator) and "j" represent the free monomer:
+    ! Reaction speed = k_ij * [n]
+    num = a_mon(o_mon) % k(n_mon) * dble(a_mon(n_mon) % amount)
+    ! Calculating the denominator.
+    ! Sum of all reaction speeds \sum_{j=1}^{N} ( k_ij * [j] )
+    do i = 1, nbr_mon
+      denom = denom + a_mon(o_mon) % k(i) * dble(a_mon(i) % amount)
+    end do
+
+    a_mon(o_mon) % p(n_mon) = num / denom
+1 end subroutine reaction_probability
 !=================================================================================!
   subroutine chain_grow(left, right)
     implicit none
@@ -142,13 +216,6 @@ contains
       o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:o_chain % length(i))
     end do
     o_chain % index = n_index
-
-    ! Flagging the chain we just lifted as removed.
-    ! Making the removed chain's length equal to zero.
-    ! If we don't do this Fortran places whatever character we set this to at the start of all other chains.
-    ! By making a zero size array we avoid such an undesirable phenomenon. Works with (a:b) where b < a.
-    !o_chain % store(r_index)(1:0) = ''
-    ! Add a counter to the number of removed chains.
     o_chain % rem = o_chain % rem + 1
   end subroutine remove_chain
 !=================================================================================!
@@ -211,9 +278,9 @@ contains
                            dimer(3) % name )
 
     ! Allocating reaction coefficients (k) and probabilities (p) for all monomers.
-    allocate( dimer(1) % k(n_mon), dimer(1) % p(n_mon), &
-              dimer(2) % k(n_mon), dimer(2) % p(n_mon), &
-              dimer(3) % k(n_mon), dimer(3) % p(n_mon) )
+    allocate( dimer(1) % k(n_tot), dimer(1) % p(n_tot), &
+              dimer(2) % k(n_tot), dimer(2) % p(n_tot), &
+              dimer(3) % k(n_tot), dimer(3) % p(n_tot) )
 
     ! Allocating termination names.
     allocate ( character :: term(1) % name, &
@@ -237,6 +304,5 @@ contains
 
     ! Allocating current chain
     allocate ( character :: c_chain )
-
   end subroutine allocation
 end module two_monomer_data_declaration

@@ -14,25 +14,31 @@ program main
   dimer(3) = monomer('B', 80, 1, [0., 4. ,1.], [0., 0., 0.], 0)
 
   ! Initialising terminations.
-  term(1) = termination('Disproportiation',[2.])
+  term(1) = termination('Disproportiation',[2000],[0.])
   ! Initialising terminations.
-  term(2) = termination('Transfer',[1.])
+  term(2) = termination('Recombination',[3000],[0.])
   ! Initialising terminations.
-  term(3) = termination('Recombination',[1.])
+  term(3) = termination('Transfer',[5000],[0.])
 
-
-  call norm_termination(term)
-  call norm_monomer(dimer)
+  print*, ''
+  call termination_probability(term)
+  print*, 'Un-normalised termination probabilities:'
+  do i = 1, n_tot
+    write(*,'(A, f0.10)') ' '//term(i) % name//' = ', term(i) % p
+  end do
+  print*, ''
+  call normalise_termination(term)
+  call normalise_reaction_coeff(dimer)
   do i = 1, n_tot
     do j = 1, n_tot
-      call reaction_probability(i, j, dimer)
+      call reaction_probability(dimer, i, j)
     end do
   end do
 
-  print*, ''
+
   print*, 'Normalised termination probabilities:'
   do i = 1, n_tot
-    write(*,'(A, f0.5)') ' '//term(i) % name//' = ', term(i) % p(1)
+    write(*,'(A, f0.10)') ' '//term(i) % name//' = ', term(i) % p
   end do
   print*, ''
 
@@ -48,4 +54,6 @@ program main
   do i = 1, n_tot
     write(*,'(A, f0.5, A, f0.5, A, f0.5)') dimer(i) % name//' ', dimer(i) % p(1), ' ', dimer(i) % p(2), ' ', dimer(i) % p(3)
   end do
+
+  call ZBQLINI(0)
 end program main

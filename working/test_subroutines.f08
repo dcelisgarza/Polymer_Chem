@@ -26,6 +26,15 @@ program test_subroutines
   type(packing_character) :: string
 
   call cpu_time(start)
+
+  call ZBQLINI(0)
+  print*, ''
+  print*, 'Testing random number generation.'
+  do counter = 1, 10
+    print*, ZBQLU01(0), floor(ZBQLU01(0)*2.0)+1
+  end do
+  print*, '-----------------------------------------'
+
   print*, ''
   print*, 'Testing two step allocation of character arrays.'
   ! Allocate array size.
@@ -48,14 +57,6 @@ program test_subroutines
   print*, 'dsca % oscac(2) = ', dsca % oscac(2)(1:9)
   print*, '---------------------------------'
 
-  call ZBQLINI(0)
-  print*, ''
-  print*, 'Testing random number generation.'
-  do counter = 1, 10
-    print*, ZBQLU01(0), floor(ZBQLU01(0)*2.0)+1
-  end do
-  print*, '-----------------------------------------'
-
   print*, ''
   print*, 'Testing one-step allocation of character arrays.'
   ! Simultaneaous allocation of array size and arbitrary character size to entries.
@@ -77,10 +78,10 @@ program test_subroutines
   c_chain = dimer(1) % name(1:1)
   print*, 'Before elongation: chain length = ', len(c_chain),' and chain = ', c_chain
   do counter = 1, 5
-    call chain_store(o_chain(1),c_chain)
-    call chain_grow(c_chain,trim(dimer(1) % name(1:1)))
+    call store_chain(o_chain(1),c_chain)
+    call grow_chain(c_chain,trim(dimer(1) % name(1:1)))
   end do
-  call chain_store(o_chain(1),c_chain)
+  call store_chain(o_chain(1),c_chain)
   print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(c_chain),' and chain = ', c_chain
   print*, 'Printing the chain at every step'
   do counter = 1, 6
@@ -95,10 +96,10 @@ program test_subroutines
   test_chain = trim(dimer(1) % name(1:3))
   print*, 'Before elongation: chain length = ', len(test_chain),' and chain = ', test_chain
   do counter = 1, 5
-    call chain_store(o_chain(1),test_chain)
-    call chain_grow(test_chain,trim(dimer(1) % name(1:3)))
+    call store_chain(o_chain(1),test_chain)
+    call grow_chain(test_chain,trim(dimer(1) % name(1:3)))
   end do
-    call chain_store(o_chain(1),test_chain)
+    call store_chain(o_chain(1),test_chain)
   print*, 'After ', counter-1_i2, ' additions of initiator: chain length = ', len(test_chain),' and chain = ', test_chain
   print*, '-----------------------------------------'
   print*, 'Printing the chain at every step'
@@ -160,7 +161,7 @@ program test_subroutines
   print*, ''
   print*, 'Testing string reversal subroutine.'
   print*, 'Before reversal: ', test_chain
-  call chain_reverse(test_chain)
+  call reverse_chain(test_chain)
   print*, 'After reversal:  ', test_chain
   print*, '-----------------------------------------'
 
@@ -185,7 +186,7 @@ program test_subroutines
     print*, 'Old chain #', counter, ' = ' , o_chain(1) % store(counter)(1:o_chain(1) % length(counter))
   end do
   print*, ''
-  print*, 'Chain ended by recombination = ', test_chain, ' Recombined chain =', o_chain(3)%store(1)(1:o_chain(3)%length(1))
+  print*, ' Recombined chain = ', o_chain(3)%store(1)(1:o_chain(3)%length(1))
   print*, '-----------------------------------------'
 
   print*, ''
@@ -204,7 +205,7 @@ program test_subroutines
     print*, 'Name: ', dimer(counter) % name,', Amount = ', &
     dimer(counter) % amount,', K = ', dimer(counter) % k, ', P = ', dimer(counter) % p
   end do
-  call reaction_probability(2, 2, dimer)
+  call reaction_probability(dimer, 2, 2)
   print*, 'After calcullation:'
   do counter = 2, 3
     print*, 'Name: ', dimer(counter) % name,', Amount = ', &

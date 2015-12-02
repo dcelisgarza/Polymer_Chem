@@ -205,7 +205,7 @@ program test_subroutines
     print*, 'Name: ', dimer(counter) % name,', Amount = ', &
     dimer(counter) % amount,', K = ', dimer(counter) % k, ', P = ', dimer(counter) % p
   end do
-  call reaction_probability(dimer, 2, 2)
+  call rtn_prob(dimer, 2, 2)
   print*, 'After calcullation:'
   do counter = 2, 3
     print*, 'Name: ', dimer(counter) % name,', Amount = ', &

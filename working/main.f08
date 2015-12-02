@@ -21,26 +21,19 @@ program main
   term(3) = termination('Transfer',[5000],[0.])
 
   print*, ''
-  call termination_probability(term)
-  print*, 'Un-normalised termination probabilities:'
+  call term_prob_from_kinetic_chain_len(term)
+  print*, 'Termination probabilities from kinetic chain lengths:'
   do i = 1, n_tot
     write(*,'(A, f0.10)') ' '//term(i) % name//' = ', term(i) % p
   end do
   print*, ''
-  call normalise_termination(term)
-  call normalise_reaction_coeff(dimer)
-  do i = 1, n_tot
-    do j = 1, n_tot
-      call reaction_probability(dimer, i, j)
+
+  call norm_rtn_coeff(dimer)
+  do concurrent (i = 1: n_tot)
+    do concurrent (j = 1: n_tot)
+      call rtn_prob(dimer, i, j)
     end do
   end do
-
-
-  print*, 'Normalised termination probabilities:'
-  do i = 1, n_tot
-    write(*,'(A, f0.10)') ' '//term(i) % name//' = ', term(i) % p
-  end do
-  print*, ''
 
   print*, 'Normalised reaction constants:'
   print*, '    ',dimer(1) % name, '      ',dimer(2) % name, '      ', dimer(3) % name

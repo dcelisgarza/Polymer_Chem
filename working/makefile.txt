@@ -1,0 +1,24 @@
+# Defining variables.
+target = two_mon_copoly
+objects = numbers.o randgen.o mod_config_polymer.o mod_polymerise.o main.o
+f08comp = gfortran
+# Makefile
+default: $(target)
+$(target): $(objects)
+	$(f08comp) $(objects) -o $@
+numbers.o: numbers.f08
+	$(f08comp) -c numbers.f08
+randgen.o: randgen.f
+	$(f08comp) -c randgen.f
+mod_config_polymer.o: mod_config_polymer.f08
+	$(f08comp) -c mod_config_polymer.f08
+mod_polymerise.o: mod_polymerise.f08
+	$(f08comp) -c mod_polymerise.f08
+main.o: main.f08
+	$(f08comp) -c main.f08
+# Cleaning everything
+clean:
+	rm -f *.o *.mod
+clobber: clean
+	rm -f $(target)
+.PHONY: default clean cobbler

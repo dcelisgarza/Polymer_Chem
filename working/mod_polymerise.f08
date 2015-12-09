@@ -151,22 +151,16 @@ end subroutine rtn_prob
     end do CL
   end subroutine prob_limits
 !=================================================================================!
-  subroutine rtn_mon(mon, i_choice, limit)
-    ! Choose monomer for reaction.
-    implicit none
-    type(monomer), intent(inout) :: mon(:)
-    integer, intent(out) :: i_choice ! Choosing the monomer to react.
-    real(dp), intent(in) :: limit(:)
-  end subroutine rtn_mon
-!=================================================================================!
-  subroutine rtn(c_chain, mon, limit)
+  subroutine rtn(c_chain, mon)
+    ! Reaction subroutine.
     implicit none
     character(:), allocatable, intent(inout) :: c_chain      ! Current chain.
     type(monomer), intent(inout)             :: mon(:)       ! Monomers.
-    real(dp), allocatable, intent(out)       :: limit(:)
+    real(dp), allocatable                    :: limit(:)
     character(:), allocatable                :: try_last_mon ! Trying to find the last monomer in c_chain.
     integer                                  :: i, n_mon, c_length, last_mon_idx, i_choice ! Counter variable, number of monomers, length of c_chain, index of the last monomer in mon(:), free monomer which will react
     real(dp), allocatable                    :: work(:)      ! Limit and work arrays for probabilities.
+    real(dp)                                 :: choice       ! Random number to decide what we react with.
 
     n_mon = size(mon)
     ! Allocating work array.
@@ -192,8 +186,30 @@ end subroutine rtn_prob
     PW: do concurrent (i = 1: n_mon)
       work(i) = mon(last_mon_idx) % p(i)
     end do PW
-    ! Calculate the limits of our ranges to help decide which monomer will react..
+    ! Calculate the limits of our ranges to help decide which monomer will react.
     call prob_limits(limit, work, n_mon)
+    ! Selecting which Monomer (M) our chain will react with.
+    choice = ZBQLU01(0)
+    ! Check if choice is in (0, PXI].
+    M: if (choice <= limit(1)) then
+      ! React with I.
+      i_choice = 1
+      call grow_chain(c_chain, mon(i_choice) % name)
+      mon(i_choice) % amount = mon(i_choice) % amount - 1
+    ! Check if choice is in (PXI, PXI + PXA]
+    else if (limit(1) < choice .and. choice <= limit(2)) then M
+      ! React with A.
+      i_choice = 2
+      call grow_chain(c_chain, mon(i_choice) % name)
+      mon(i_choice) % amount = mon(i_choice) % amount - 1
+    ! Check if choice is in (PXI + PXA, PXI + PXA + PXB = 1 ]
+    else if (limit(2) < choice) then M
+      ! React with B.
+      i_choice = 3
+      call grow_chain(c_chain, mon(i_choice) % name)
+      mon(i_choice) % amount = mon(i_choice) % amount - 1
+    end if M
+
   end subroutine rtn
 !=================================================================================!
   subroutine grow_chain(c_chain, mon)
@@ -411,11 +427,15 @@ end subroutine chain_availability
       T: if (choice <= limit(1)) then
         ! Store chain by disproportiation.
         call store_chain(o_chain(1), c_chain)
+        ! Cleaning c_chain.
+        c_chain = ''
       ! Recombination. Check if choice is in (P(disp), P(disp) + P(reco)]
       else if (limit(1) < choice .and. choice <= limit(2)) then T
         ! Check if there are Chains Available for Recombination (CAR).
         term_flag = 2
         call chain_availability(o_chain, c_chain, term_flag)
+        ! Cleaning c_chain.
+        c_chain = ''
       ! Transfer. Check if choice is in (P(disp) + P(reco), P(disp) + P(reco) + P(trns) = 1 ]
       else if (limit(2) < choice) then T
         term_flag = 3
@@ -431,15 +451,18 @@ module two_monomer_data_declaration
   use polymerisation
   implicit none
   ! n_mon := # of monomers, n_init = # of initiators, n_tot := # of monomers + # of initiators, n_k := # of reaction coefficients, n_ki = # of reaction coefficients for a monomer with an initiator, n_term = # terminations.
-  integer(i1), parameter    :: n_mon = 2, n_init = 1, n_tot = n_mon + n_init, &
+  integer, parameter        :: n_mon = 2, n_init = 1, n_tot = n_mon + n_init, &
                                n_k = n_mon, n_ki = n_mon*n_init, n_prob = ( n_mon )**2 + n_init, &
                                n_term = 3
+  integer                   :: i_choice, i, j
+  real(dp)                  :: choice
   ! We'll be simulating a dimer.
   type(monomer)             :: dimer(n_tot)
   ! We're having three terminations.
   type(termination)         :: term(n_term)
   type(chains)              :: o_chain(n_term)
   character(:), allocatable :: c_chain
+  real(dp), allocatable     :: limit(:), work(:)
 contains
   subroutine allocation
     implicit none
@@ -467,9 +490,11 @@ contains
     allocate ( o_chain(1) % length(1), &
                o_chain(2) % length(1), &
                o_chain(3) % length(1) )
+    allocate( limit(n_tot), work(n_tot) )
     o_chain % index = 1
     o_chain % rem   = 0
     ! Allocating current chain
     allocate (character :: c_chain)
+    c_chain = ''
   end subroutine allocation
 end module two_monomer_data_declaration

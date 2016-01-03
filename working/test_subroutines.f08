@@ -17,7 +17,7 @@ program test_subroutines
   ! For one-step allocation of character arrays (osca).
   character(:), allocatable :: osca(:)
   integer(i16) :: remove_entry
-  integer :: i
+  !integer :: i
   character(1) :: str
   integer, allocatable :: packing_integer(:)
   type packing_character
@@ -206,7 +206,7 @@ program test_subroutines
     dimer(counter) % amount,', K = ', dimer(counter) % k, ', P = ', dimer(counter) % p
   end do
   call rtn_prob(dimer, 2, 2)
-  print*, 'After calcullation:'
+  print*, 'After calculation:'
   do counter = 2, 3
     print*, 'Name: ', dimer(counter) % name,', Amount = ', &
     dimer(counter) % amount,', K = ', dimer(counter) % k, ', P = ', dimer(counter) % p

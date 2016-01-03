@@ -92,54 +92,6 @@ program main
   ! Initialise RNG seed.
   call ZBQLINI(0)
 
-  ! Polymerisation Loop.
-  ! Enters keeps going while there's material to polymerise.
-  PL: do while (dimer(1) % amount > 0 .or. dimer(2) % amount > 0 .or. dimer(3) % amount > 0)
-
-    ! Checking if the current Chain is Initial and we have Monomers. If we don't we exit.
-    CCM: if ( c_chain == '' .and. dimer(1) % amount == 0 ) then
-      ! If we need to start a new chain but can't for lack of initiators then we exit.
-      exit PL
-    ! If we need to start a new chain but we have initiators then we keep going.
-    else if ( c_chain == '' .and. dimer(1) % amount > 0 ) then CCM
-      ! We remove an initator because it's now part of the chain.
-      c_chain = dimer(1) % name
-      dimer(1) % amount = dimer(1) % amount - 1
-      ! Calculate reaction Probabilities for IA and IB.
-      RIAIB: do concurrent (i = 1: n_tot)
-        call rtn_prob(dimer, 1, i)
-        work(i) = dimer(1) % p(i)
-      end do RIAIB
-      choice = ZBQLU01(0)
-      call prob_limits(limit, work, n_tot)
-      ! Check if choice is in (0, PXI].
-      M: if (choice <= limit(1)) then
-        ! React with I.
-        i_choice = 1
-        call grow_chain(c_chain, dimer(i_choice) % name)
-        dimer(i_choice) % amount = dimer(i_choice) % amount - 1
-      ! Check if choice is in (PXI, PXI + PXA]
-      else if (limit(1) < choice .and. choice <= limit(2)) then M
-        ! React with A.
-        i_choice = 2
-        call grow_chain(c_chain, dimer(i_choice) % name)
-        dimer(i_choice) % amount = dimer(i_choice) % amount - 1
-      ! Check if choice is in (PXI + PXA, PXI + PXA + PXB = 1 ]
-      else if (limit(2) < choice) then M
-        ! React with B.
-        i_choice = 3
-        call grow_chain(c_chain, dimer(i_choice) % name)
-        dimer(i_choice) % amount = dimer(i_choice) % amount - 1
-      end if M
-      ! Test polymer initiation.
-      !write(*,*) choice, i_choice, c_chain, dimer(1) % amount, dimer(2) % amount, dimer(3) % amount
-    end if CCM
-
-    ! Exiting if there is no more initiator and chains can't continue growing via transfer or recombination.
-    !ITR: if ( dimer(1) % amount == 0 .and. term(2) % p(1) == 0. .and. term(3) % p(1) == 0. ) then
-    !  exit PL
-    !end if ITR
-
-  end do PL
+  call polymerise(o_chain, dimer, term, c_chain)
 
 end program main

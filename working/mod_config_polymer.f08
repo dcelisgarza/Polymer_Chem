@@ -28,12 +28,12 @@ module mod_config_polymer
     real(dp), allocatable     :: p(:)  ! Let n := # of terminations, then
   end type termination
 !=================================================================================!
-  type chains
+  type chain
     character(:), allocatable :: store(:)  ! Chain storage.
     integer(i16), allocatable :: length(:) ! Chain lengths.
     integer(i16)              :: index     ! Index of a chain. Let n := # of chains, then index = n + 1. Chains will be stored in the range [1,index-1], this prepares the array for the next chain.
     integer(i16)              :: rem       ! Number of chains removed.
-  end type chains
+  end type chain
 
 !=================================================================================!
 !------------------------------------INTERFACE------------------------------------!

@@ -2,7 +2,7 @@ program test_subroutines
   use two_monomer_data_declaration
   implicit none
   character(:), allocatable :: test_chain
-  integer(i1) :: counter
+  integer :: counter
   real(dp) :: start, end
   ! For two-step allocation of character arrays (tsca) i.e. jagged arrays with character entries.
   type tscat
@@ -16,7 +16,7 @@ program test_subroutines
   type(oscat) :: dsca
   ! For one-step allocation of character arrays (osca).
   character(:), allocatable :: osca(:)
-  integer(i16) :: remove_entry
+  integer :: remove_entry
   !integer :: i
   character(1) :: str
   integer, allocatable :: packing_integer(:)
@@ -24,6 +24,8 @@ program test_subroutines
     character(:), allocatable, dimension(:) :: c
   end type packing_character
   type(packing_character) :: string
+  character(:), allocatable :: storage(:)
+  integer, allocatable :: length(:)
 
   call cpu_time(start)
 
@@ -215,6 +217,28 @@ program test_subroutines
 
   call cpu_time(end)
   print*, ''
+
+  print*, 'Testing new chain storage:'
+  call refresh_chain_storage(o_chain(3))
+  allocate(character :: storage(1))
+  allocate(length(1))
+  do counter = 1, 5
+    write (Unit=str, FMT="(I1)") counter
+    test_chain = 'abcd'! // str
+    test_chain = trim(test_chain)
+    length(counter) = len(test_chain)
+    call store_chain(o_chain(3), test_chain)
+    !call store_chain(c_chain = test_chain, storage = storage, length = length)
+    !print*, storage(counter)(1:length(counter))
+    !print*, length(1:size(length))
+    !test_chain(1:0) = ''
+  end do
+  !print*, length(1:5)
+  do counter = 1, 5
+    print*, storage(counter)(1:length(counter))
+  end do
+
   print*, 'Total execution time = ', end-start, 'seconds.'
   print*, '-----------------------------------------'
+
 end program test_subroutines

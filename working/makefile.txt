@@ -1,21 +1,23 @@
 # Defining variables.
-target = two_mon_copoly
+target = two_mon_copoly.out
 objects = numbers.o randgen.o mod_config_polymer.o mod_polymerise.o main.o
 f08comp = gfortran
+FCFLAGS = -g
+#FCFLAGS = -O2 -fimplicit-none  -Wall  -Wline-truncation  -Wcharacter-truncation  -Wsurprising  -Waliasing  -Wimplicit-interface  -Wunused-parameter  -fwhole-file  -fcheck=all  -std=f2008  -pedantic  -fbacktrace
 # Makefile
 default: $(target)
 $(target): $(objects)
-	$(f08comp) $(objects) -o $@
+	$(f08comp) $(objects) $(FCFLAGS) -o $@
 numbers.o: numbers.f08
-	$(f08comp) -c numbers.f08
+	$(f08comp) $(FCFLAGS) -c numbers.f08
 randgen.o: randgen.f
-	$(f08comp) -c randgen.f
+	$(f08comp) $(FCFLAGS) -c randgen.f
 mod_config_polymer.o: mod_config_polymer.f08
-	$(f08comp) -c mod_config_polymer.f08
+	$(f08comp) $(FCFLAGS) -c mod_config_polymer.f08
 mod_polymerise.o: mod_polymerise.f08
-	$(f08comp) -c mod_polymerise.f08
+	$(f08comp) $(FCFLAGS) -c mod_polymerise.f08
 main.o: main.f08
-	$(f08comp) -c main.f08
+	$(f08comp) $(FCFLAGS) -c main.f08
 # Cleaning everything
 clean:
 	rm -f *.o *.mod

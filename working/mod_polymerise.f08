@@ -41,7 +41,7 @@ contains
     ! Number of terminations.
     n_term = size(term)
     ! Calculating un-normalised Termination Probabilites (TP).
-    TP: do concurrent (i = 1: n_term)
+    TP: do i = 1, n_term
       term(i) % p(1) = (term(i) % kl(1)) ** (-1.)
     end do TP
     ! Normalise terminaton probabilities.
@@ -66,7 +66,7 @@ contains
       norm_term = norm_term + term(i) % p
     end do NCT
     ! Normalised Terminations (NT).
-    NT: do concurrent (i = 1: n_tot)
+    NT: do i = 1, n_tot
       term(i) % p = term(i) % p / norm_term
     end do NT
   end subroutine norm_term_prob
@@ -93,7 +93,7 @@ contains
       end do NCRC2
     end do NCRC1
     ! Normalising Reaction Coefficients (NRC).
-    NRC: do concurrent (i = 1: n_tot)
+    NRC: do i = 1, n_tot
       mon(i) % k = mon(i) % k / norm_coeff(i)
     end do NRC
   end subroutine norm_rtn_coeff
@@ -142,7 +142,7 @@ contains
     integer               :: i
 
     ! Calculating Limits (CL). Our probabilities are normalised so they add up to one, no need to calculate the top limit as it's 1.
-    CL: do concurrent (i = 1: nbr_limits)
+    CL: do i = 1, nbr_limits
       ICL: if (i > 1) then
         limit(i) = prob(i) + limit(i-1)
       else ICL
@@ -179,11 +179,11 @@ contains
       end if ILMC
     end do LMC
     ! We only need to calculate reaction probabilities between mon(last_mon_idx), or Last monomer in the chain and all Other monomers (LO).
-    LO: do concurrent (i = 1: n_mon)
+    LO: do i = 1, n_mon
       call rtn_prob(mon, last_mon_idx, i)
     end do LO
     ! Passing reaction Probabilities onto the Work (PW) array.
-    PW: do concurrent (i = 1: n_mon)
+    PW: do i = 1, n_mon
       work(i) = mon(last_mon_idx) % p(i)
     end do PW
     ! Calculate the limits of our ranges to help decide which monomer will react.
@@ -212,13 +212,17 @@ contains
 
   end subroutine rtn
   !=================================================================================!
-  subroutine polymerise(o_chain, mon, term, c_chain)
+  subroutine polymerise(o_chain, mon, term)
     implicit none
     type(chain), intent(inout)               :: o_chain(:)  ! Chain storage.
     type(monomer), intent(inout)             :: mon(:)      ! Monomers.
     type(termination), intent(in)            :: term(:)     ! Terminations.
-    character(:), allocatable, intent(inout) :: c_chain     ! Current chain.
+    character(:), allocatable                :: c_chain     ! Current chain.
     integer i
+
+    ! Allocating current chain
+    allocate (character :: c_chain)
+    c_chain = ''
     ! Polymerisation Loop.
     ! Enters keeps going while there's material to polymerise.
     PL: do while ( mon(1) % amount > 0 .or. mon(2) % amount > 0 .or. mon(3) % amount > 0 )
@@ -239,14 +243,13 @@ contains
         ! We can also end via recombination, work on it.
         !======================================================!
         call store_chain(o_chain(1), c_chain)
-        c_chain = ''
         exit PL
       end if CCIM
     end do PL
 
-      do i = 1, o_chain(1) % index - 1
-        print*, 'Disp ', o_chain(1) % store(i)(1:o_chain(1)%length(i))
-      end do
+    do i = 1, o_chain(1) % index - 1
+      print*, 'Disp ', o_chain(1) % store(i)(1:o_chain(1)%length(i))
+    end do
 
 
     !do i = 1, o_chain(2) % index - 1
@@ -266,7 +269,7 @@ contains
     type(termination), intent(in)            :: term(:)    ! Terminations.
     real(dp)                                 :: choice     ! Choose termination.
 
-    ! Are we terminating?
+    ! Are we terminating?ccim
     choice = ZBQLU01(0)
     T: if ( choice <= term(1) % kl(1)**(-1.) ) then
       call decide_termination(o_chain, c_chain, term)
@@ -286,8 +289,8 @@ contains
   subroutine reverse_chain(c_chain)
     implicit none
     ! Make sure c_chain has already been trimmed.
-    character(len=*), intent(inout) :: c_chain     ! Current chain.
-    integer(i16)                    :: i, c_length ! Counter variables.
+    character(:), allocatable, intent(inout) :: c_chain     ! Current chain.
+    integer                    :: i, c_length ! Counter variables.
 
     ! Setting the length to be equal to the chain length.
     c_length = len(c_chain)
@@ -298,9 +301,11 @@ contains
     subroutine store_chain(o_chain, c_chain)
       implicit none
       type(chain), intent(inout)   :: o_chain ! Old chains.
-      character(len=*), intent(in) :: c_chain ! Current chain.
+      character(:), allocatable, intent(inout) :: c_chain ! Current chain.
       type(chain)                  :: work    ! Work array for moving data.
-      integer(i16)                 :: o_index, c_index, n_index, & ! Old, current and next index.
+!      character(:), allocatable    :: store(:)
+!      integer, allocatable    :: length(:)
+      integer                 :: o_index, c_index, n_index, & ! Old, current and next index.
       c_chain_length, & ! Current chain length.
       i ! Counter variable.
       ! Current index
@@ -313,48 +318,151 @@ contains
       c_chain_length = len(c_chain)
       ! If this is not the First Chain (FC).
       FC: if (c_index > 1) then
-                ! Allocate the array for data transfer.
-                allocate( character :: work % store(o_index) )
-                allocate( work % length(o_index) )
-                ! Save all the Old Chains (SOC) and their lengths.
-                SOC: do i = 1, o_index
-                  work % length(i) = o_chain % length(i)
-                  work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
-                end do SOC
-                ! Deallocate the old chain and length storage and allocate space for one more entry (n_index = c_index + 1) in each.
-                deallocate( o_chain % store, o_chain % length )
-                allocate( character :: o_chain % store(n_index) )
-                allocate( o_chain % length(n_index) )
-                ! Move the Saved Chains Back (MSCB) into the expanded storage array.
-                MSCB: do i = 1, o_index
-                  o_chain % length(i) = work % length(i)
-                  o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:work % length(i))
-                end do MSCB
-                ! Add the new entries to the expanded length and chain storage arrays.
-                o_chain % length(c_index) = c_chain_length
-                o_chain % store(c_index)(1:c_chain_length) = c_chain
+        ! Allocate the array for data transfer.
 
-        ! Allocate work array for data transfer.
-!        allocate(work % length(c_index))
-!        allocate(character :: work % store(c_index))
-!        ! Add current chain to the old array.
-!        o_chain % length(c_index) = c_chain_length
-!        o_chain % store(c_index)(1:c_chain_length) = c_chain
-!        ! Save all the Old Chains (SOC) and their lengths.
+!        allocate( character :: work % store(n_index) )
+!        allocate( work % length(n_index) )
+        ! Save all the Old Chains (SOC) and their lengths.
 !        SOC: do concurrent (i = 1: o_index)
 !          work % length(i) = o_chain % length(i)
 !          work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
 !        end do SOC
-!        ! Deallocate the old chain and length storage and allocate space for one more entry (n_index = c_index + 1) in each.
-!        deallocate( o_chain % store, o_chain % length )
-!        allocate( character :: o_chain % store(n_index) )
-!        allocate( o_chain % length(n_index) )
+!        work % length(c_index) = c_chain_length
+!        work % store(c_index)(1:c_chain_length) = c_chain
+        ! Moving data and allocation.
+!        call move_alloc(work % length, o_chain % length)
+!        call move_alloc(work % store, o_chain % store)
+
+!        allocate( character :: store(n_index) )
+!        allocate( length(n_index) )
+!        length(1:o_index) = o_chain % length
+!        SOC: do i = 1, o_index
+!          store(i)(1:length(i)) = o_chain % store(i)(1:length(i))
+!        end do SOC
+!        length(c_index) = c_chain_length
+!        store(c_index)(1:c_chain_length) = c_chain
+!        print*, 'using store ', store(1)(1:length(1))
+!        print*, 'using store ', store(2)(1:length(2))
+!        call move_alloc(length, o_chain % length)
+!        call move_alloc(store, o_chain % store)
+!        print*, 'using oof ', o_chain % store(1)(1:o_chain%length(1))
+!        print*, 'using oof ', o_chain % store(2)(1:o_chain%length(2))
+
+        allocate( character :: work % store(o_index) )
+        allocate( work % length(o_index) )
+      ! Save all the Old Chains (SOC) and their lengths.
+        SOC: do i = 1, o_index
+          work % length(i) = o_chain % length(i)
+          work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
+        end do SOC
+      ! Deallocate the old chain and length storage and allocate space for one more entry (n_index = c_index + 1) in each.
+        deallocate( o_chain % store, o_chain % length )
+        allocate( character :: o_chain % store(n_index) )
+        allocate( o_chain % length(n_index) )
+      ! Move the Saved Chains Back (MSCB) into the expanded storage array.
+        MSCB: do i = 1, o_index
+          o_chain % length(i) = work % length(i)
+          o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:work % length(i))
+        end do MSCB
+      ! Add the new entries to the expanded length and chain storage arrays.
+        print*, 'c_chain_2.0 ', o_chain % store(c_index)(1:c_chain_length)
+        o_chain % length(c_index) = c_chain_length
+        o_chain % store(c_index)(1:c_chain_length) = c_chain
+        print*, 'c_chain_2.1 ', o_chain % store(c_index)(1:c_chain_length)
+
+        ! Allocate work array for data transfer.
+        !        allocate(work % length(c_index))
+        !        allocate(character :: work % store(c_index))
+        !        ! Add current chain to the old array.
+        !        o_chain % length(c_index) = c_chain_length
+        !        o_chain % store(c_index)(1:c_chain_length) = c_chain
+        !        ! Save all the Old Chains (SOC) and their lengths.
+        !        SOC: do concurrent (i = 1: o_index)
+        !          work % length(i) = o_chain % length(i)
+        !          work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
+        !        end do SOC
+        !        ! Deallocate the old chain and length storage and allocate space for one more entry (n_index = c_index + 1) in each.
+        !        deallocate( o_chain % store, o_chain % length )
+        !        allocate( character :: o_chain % store(n_index) )
+        !        allocate( o_chain % length(n_index) )
         ! Move the Saved Chains Back (MSCB) into the expanded storage array.
-!        MSCB: do concurrent (i = 1: c_index)
-!          o_chain % length(i) = work % length(i)
-!          o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:work % length(i))
-!        end do MSCB
+        !        MSCB: do concurrent (i = 1: c_index)
+        !          o_chain % length(i) = work % length(i)
+        !          o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:work % length(i))
+        !        end do MSCB
         ! If this is the first entry of the array then there are no old chains to save.
+      else FC
+        ! We only need to save the current chain and its length.
+        print*, 'c_chain_1.0 ', c_index, o_chain % store(c_index)(1:c_chain_length)
+        o_chain % length(c_index) = c_chain_length
+        o_chain % store(c_index)(1:c_chain_length) = c_chain
+        print*, 'c_chain_1.1 ', c_index, o_chain % store(c_index)(1:c_chain_length)
+      end if FC
+      ! Update the chain index.
+      o_chain % index = n_index
+      print*, 'c_chain_1_at_the_end ', 1, o_chain % store(1)(1:c_chain_length)
+      print*, 'c_chain_2_at_the_end ', 2, o_chain % store(2)(1:c_chain_length)
+    end subroutine store_chain
+    !=================================================================================!
+    subroutine store_chain2(o_chain, c_chain, storage, length)
+      implicit none
+      type(chain), intent(inout), optional   :: o_chain ! Old chains.
+      character(len=*), intent(in) :: c_chain ! Current chain.
+      type(chain)                  :: work    ! Work array for moving data.
+      integer                 :: o_index, c_index, n_index, & ! Old, current and next index.
+                                      c_chain_length, & ! Current chain length.
+                                      i ! Counter variable.
+      character(:), allocatable, intent(inout), optional :: storage(:)
+      integer, allocatable, intent(inout), optional :: length(:)
+      character(:), allocatable :: wstorage(:)
+      integer, allocatable :: wlength(:)
+
+      ! Obtain the current chain length.
+      c_chain_length = len(c_chain)
+      ! If Object Orientation is Fixed (OOF).
+      OOF: if ( present(o_chain) .eqv. .true. ) then
+      ! Current index
+      c_index = o_chain % index
+      ! Save the old index.
+      o_index = c_index - 1
+      ! The new index is one more than the old one.
+      n_index = c_index + 1
+      ! If this is not the First Chain (FC).
+      FC: if (c_index > 1) then
+        ! Allocate the array for data transfer.
+        allocate( character :: work % store(o_index) )
+        allocate( work % length(o_index) )
+      ! Save all the Old Chains (SOC) and their lengths.
+        SOC: do i = 1, o_index
+          work % length(i) = o_chain % length(i)
+          work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
+        end do SOC
+      ! Deallocate the old chain and length storage and allocate space for one more entry (n_index = c_index + 1) in each.
+        deallocate( o_chain % store, o_chain % length )
+        allocate( character :: o_chain % store(n_index) )
+        allocate( o_chain % length(n_index) )
+      ! Move the Saved Chains Back (MSCB) into the expanded storage array.
+        MSCB: do i = 1, o_index
+          o_chain % length(i) = work % length(i)
+          o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:work % length(i))
+        end do MSCB
+      ! Add the new entries to the expanded length and chain storage arrays.
+        o_chain % length(c_index) = c_chain_length
+        o_chain % store(c_index)(1:c_chain_length) = c_chain
+        !allocate( character :: work % store(n_index) )
+        !allocate( work % length(n_index) )
+        ! Save all the Old Chains (SOC) and their lengths.
+        !SOC: do i = 1, o_index
+        !  work % length(i) = o_chain % length(i)
+        !  work % store(i)(1:work % length(i)) = o_chain % store(i)(1:o_chain % length(i))
+        !end do SOC
+        !work % length(c_index) = c_chain_length
+        !work % store(c_index)(1:c_chain_length) = c_chain
+        ! Moving data and allocation.
+        ! FUCKING BUGGED GOD DAMNIT BRAH, WHY SON WHY?!
+        !call move_alloc(work % length, o_chain % length)
+        !call move_alloc(work % store, o_chain % store)
+        ! FUCKING BUGGED GOD DAMNIT BRAH, WHY SON WHY?!
       else FC
         ! We only need to save the current chain and its length.
         o_chain % length(c_index) = c_chain_length
@@ -362,13 +470,31 @@ contains
       end if FC
       ! Update the chain index.
       o_chain % index = n_index
-    end subroutine store_chain
+    else if (present(o_chain) .eqv. .false.) then OOF
+      c_index = size(length)
+      n_index = c_index + 1
+      ! Allocate the array for data transfer.
+      allocate( character :: wstorage(n_index) )
+      allocate( wlength(n_index) )
+
+      ! Save all the Old Chains (SOC) and their lengths.
+      wlength(1:c_index) = length(1:c_index)
+      SOC2: do i = 1, c_index
+        wstorage(i)(1:wlength(i)) = storage(i)(1:length(i))
+      end do SOC2
+
+      ! Moving data and allocation.
+      call move_alloc(wlength, length)
+      call move_alloc(wstorage, storage)
+
+    end if OOF
+  end subroutine store_chain2
     !=================================================================================!
     subroutine remove_chain(o_chain, r_index)
       implicit none
       type(chain), intent(inout) :: o_chain             ! Old chains.
-      integer(i16), intent(in)    :: r_index             ! Index to be removed.
-      integer(i16)                :: o_index, n_index, i ! Old and new index.
+      integer, intent(in)    :: r_index             ! Index to be removed.
+      integer                :: o_index, n_index, i ! Old and new index.
       type(chain)                :: work                ! Work array for moving data.
 
       ! Calculating indices.
@@ -381,7 +507,7 @@ contains
       o_chain % length(r_index) = 0
       o_chain % length = pack(o_chain % length, o_chain % length /= 0)
       ! Saving the Remaining Chains (SRC).
-      SRC: do concurrent (i = 1: n_index)
+      SRC: do i = 1, n_index
         ! Moving data has to be done differently depending on whether or not we're Behind the Removed Index (BRI).
         BRI: if (i < r_index) then
           work % store(i)(1:o_chain % length(i)) = o_chain % store(i)(1:o_chain % length(i))
@@ -395,7 +521,7 @@ contains
       deallocate( o_chain % store )
       allocate( character :: o_chain % store(n_index)  )
       ! Moving the Saved Chains Back (MSCB) into the contracted storage array.
-      MSCB: do concurrent (i = 1: n_index)
+      MSCB: do i = 1, n_index
         o_chain % store(i)(1:o_chain % length(i)) = work % store(i)(1:o_chain % length(i))
       end do MSCB
       ! Setting the index to the new index.
@@ -408,7 +534,7 @@ contains
       implicit none
       type(chain), intent(inout)              :: ol_chain, or_chain ! Old chains, ol := lifted chain, or := old chains by recombination.
       character(:), allocatable, intent(inout) :: c_chain ! Current chain.
-      integer(i16), intent(in)                 :: r_index ! Index of the chain onto which c_chain is added.
+      integer, intent(in)                 :: r_index ! Index of the chain onto which c_chain is added.
       character(:), allocatable                :: work    ! Chain which will be recombined with c_chain.
 
       ! Reversing the current chain (c_chain).
@@ -427,7 +553,7 @@ contains
       implicit none
       type(chain), intent(inout)              :: ol_chain, ot_chain ! Old chains, ol := lifted chain, ot := old chains by transfer.
       character(:), allocatable, intent(inout) :: c_chain ! Current chain comes in, reactivated chain comes out.
-      integer(i16), intent(in)                 :: t_index ! Index of the chain reactivated by transfer.
+      integer, intent(in)                 :: t_index ! Index of the chain reactivated by transfer.
 
       ! Storing the chain that just ended.
       call store_chain(ot_chain, c_chain)
@@ -443,7 +569,7 @@ contains
       character(:), allocatable, intent(inout) :: c_chain    ! Current chain.
       integer, intent(in)                      :: term_flag  ! Termination flag. term_flag = 2 -> recombination. term_flag = 3 -> transfer
       integer                                  :: i_choice   ! Choose the old chain array we perturb.
-      integer(i16)                             :: index      ! Index of the chain we take.
+      integer                             :: index      ! Index of the chain we take.
 
       ! Check if there are Chains Available for Recombination (CAR).
       CAR: if (o_chain(1) % index > 1 .or. o_chain(3) % index > 1) then
@@ -495,7 +621,7 @@ contains
       ! Allocate array size.
       allocate( limit(n_term), work(n_term) )
       ! Moving the termination probabilities to a work array.
-      do concurrent (i = 1: n_term)
+      do i = 1, n_term
         work(i) = term(i) % p(1)
       end do
       ! Calculating limits.
@@ -505,7 +631,7 @@ contains
       ! Disproportiation. Check if choice is in (0, P(disp)].
       T: if (choice <= limit(1)) then
         ! Store chain by disproportiation.
-        call store_chain(o_chain(1), c_chain)
+        call store_chain(o_chain = o_chain(1), c_chain = c_chain)
         ! Cleaning c_chain.
         c_chain = ''
         ! Recombination. Check if choice is in (P(disp), P(disp) + P(reco)]
@@ -539,8 +665,6 @@ contains
     ! We're having three terminations.
     type(termination)         :: term(n_term)
     type(chain)               :: o_chain(n_term)
-    character(:), allocatable :: c_chain
-    real(dp), allocatable     :: limit(:), work(:)
   contains
     subroutine allocation
       implicit none
@@ -568,11 +692,7 @@ contains
       allocate ( o_chain(1) % length(1), &
       o_chain(2) % length(1), &
       o_chain(3) % length(1) )
-      allocate( limit(n_tot), work(n_tot) )
       o_chain % index = 1
       o_chain % rem   = 0
-      ! Allocating current chain
-      allocate (character :: c_chain)
-      c_chain = ''
     end subroutine allocation
   end module two_monomer_data_declaration

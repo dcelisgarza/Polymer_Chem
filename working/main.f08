@@ -6,7 +6,7 @@ program main
   call allocation
 
   ! Setting initial monomer parameters.
-  DI: do concurrent (i = 1: 3)
+  DI: do i = 1, 3
     dimer(i) % k(1) = 0.
     dimer(i) % reacted = 0
   end do DI
@@ -33,7 +33,7 @@ program main
   write(*, '(A)', advance = "no") ' P('//term(2) % name(1:4)//') = '; read(*,*) term(2) % p(1)
   write(*, '(A)', advance = "no") ' P('//term(3) % name(1:4)//') = '; read(*,*) term(3) % p(1)
   write(*, '(A)', advance = "no") ' Lambda = '; read(*,*) term(1) % kl(1)
-  KL: do concurrent (i = 2:3)
+  KL: do i = 2, 3
     term(i) % kl(1) = term(1) % kl(1)
   end do KL
 
@@ -61,8 +61,8 @@ program main
 
   call norm_rtn_coeff(dimer)
 
-  IRP1: do concurrent (i = 1: n_tot)
-    IRP2: do concurrent (j = 1: n_tot)
+  IRP1: do i = 1, n_tot
+    IRP2: do j = 1, n_tot
       call rtn_prob(dimer, i, j)
     end do IRP2
   end do IRP1
@@ -92,6 +92,6 @@ program main
   ! Initialise RNG seed.
   call ZBQLINI(0)
 
-  call polymerise(o_chain, dimer, term, c_chain)
+  call polymerise(o_chain, dimer, term)
 
 end program main

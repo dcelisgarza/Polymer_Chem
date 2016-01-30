@@ -14,7 +14,7 @@ module mod_config_polymer
   type monomer
     ! Definition of a monomer.
     character(:), allocatable :: name
-    integer(i16)              :: amount  ! Amount of monomer.
+    integer              :: amount  ! Amount of monomer.
     real(dp)                  :: mass    ! Monomer mass.
     real(dp), allocatable     :: k(:)    ! Kinetic reaction coefficients with other monomers.
     real(dp), allocatable     :: p(:)    ! Let n := # of monomers (not initiators), then extent(p) = n.
@@ -24,15 +24,15 @@ module mod_config_polymer
   type termination
     ! Definition of a termination.
     character(:), allocatable :: name
-    integer(i16), allocatable :: kl(:) ! Kinetic chain length. extent(p) = n.
+    integer, allocatable :: kl(:) ! Kinetic chain length. extent(p) = n.
     real(dp), allocatable     :: p(:)  ! Let n := # of terminations, then
   end type termination
 !=================================================================================!
   type chain
     character(:), allocatable :: store(:)  ! Chain storage.
-    integer(i16), allocatable :: length(:) ! Chain lengths.
-    integer(i16)              :: index     ! Index of a chain. Let n := # of chains, then index = n + 1. Chains will be stored in the range [1,index-1], this prepares the array for the next chain.
-    integer(i16)              :: rem       ! Number of chains removed.
+    integer, allocatable :: length(:) ! Chain lengths.
+    integer              :: index     ! Index of a chain. Let n := # of chains, then index = n + 1. Chains will be stored in the range [1,index-1], this prepares the array for the next chain.
+    integer              :: rem       ! Number of chains removed.
   end type chain
 
 !=================================================================================!
